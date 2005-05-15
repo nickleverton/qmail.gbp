@@ -37,11 +37,26 @@ accepts messages that contain long lines or non-ASCII characters,
 even though such messages violate the SMTP protocol.
 .SH "CONTROL FILES"
 .TP 5
+.I badhelo
+Unacceptable HELO/EHLO host names.
+.B qmail-smtpd
+will reject every recipient address for a message if
+the host name is listed in, 
+or matches a POSIX regular expression pattern listed in,
+.IR badhelo .
+If the 
+.B NOBADHELO 
+environment variable is set, then the contents of 
+.IR badhelo 
+will be ignored.
+For more information, please have a look at doc/README.qregex.
+.TP 5
 .I badmailfrom
 Unacceptable envelope sender addresses.
 .B qmail-smtpd
 will reject every recipient address for a message
-if the envelope sender address is listed in
+if the envelope sender address is listed in, or matches a POSIX regular expression
+pattern listed in,
 .IR badmailfrom .
 A line in
 .I badmailfrom
@@ -49,6 +64,32 @@ may be of the form
 .BR @\fIhost ,
 meaning every address at
 .IR host .
+For more information, please have a look at doc/README.qregex.
+.TP 5
+.I badmailfromnorelay
+Functions the same as the
+.IR badmailfrom
+control file but is read only if the 
+.B RELAYCLIENT 
+environment variable is not set.
+For more information, please have a look at doc/README.qregex.
+.TP 5
+.I badmailto
+Unacceptable envelope recipient addresses.
+.B qmail-smtpd
+will reject every recipient address for a message if the recipient address
+is listed in,
+or matches a POSIX regular expression pattern listed in,
+.IR badmailto .
+For more information, please have a look at doc/README.qregex.
+.TP 5
+.I badmailtonorelay
+Functions the same as the
+.IR badmailto
+control file but is read only if the
+.B RELAYCLIENT
+environment variable is not set.
+For more information, please have a look at doc/README.qregex.
 .TP 5
 .I databytes
 Maximum number of bytes allowed in a message,

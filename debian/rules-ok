@@ -1,0 +1,111 @@
+#!/usr/bin/make -f 
+#
+
+PKG_VER = `perl -e 'print <> =~ /\((.*)\)/' debian/changelog`
+PKG_UPVER = `perl -e 'print <> =~ /\((.*)-[^-]*\)/' debian/changelog`
+
+build:
+	$(checkdir)
+	if fgrep QMAIL/bin *.sh >/dev/null; then \
+	    echo >&2 "You must run debian/debianize-source-tree first!"; \
+	    exit 1; \
+	fi
+	$(MAKE) man
+	$(MAKE)
+	touch build
+
+clean:
+	$(checkdir)
+	-rm -f build
+	-$(MAKE) clean
+	-rm `find . -name "*~"`
+	-rm -rf debian/files
+	-rm -rf `find debian/* -type d -prune`
+
+binary-indep: checkroot build
+	$(checkdir)
+
+binary-arch: checkroot build
+	$(checkdir)
+	-rm -rf debian/files debian/substvars debian/tmp
+	-rm -rf `find debian/* -type d -prune`
+# Make the directory tree and copy qmail files.
+	install -d debian/tmp/etc/init.d \
+		debian/tmp/usr/doc \
+		debian/tmp/var/qmail \
+		debian/tmp/var/qmail/users \
+		debian/tmp/var/spool \
+		debian/tmp/usr/bin \
+		debian/tmp/usr/sbin \
+		debian/tmp/usr/lib \
+		debian/tmp/usr/lib/qmail \
+		debian/qmail-src/usr/bin \
+		debian/qmail-src/usr/src/qmail-src \
+		debian/qmail-src/usr/doc/qmail-src
+	./qmail-hier | ./install debian/tmp/var/qmail
+	mv debian/tmp/var/qmail/queue debian/tmp/var/spool/qmail
+	mv debian/tmp/var/qmail/control debian/tmp/etc/qmail
+	(cd debian/tmp/var/qmail && ln -s /var/spool/qmail queue)
+	(cd debian/tmp/var/qmail && ln -s /etc/qmail control)
+	(cd debian/tmp/var/qmail && ln -s /usr/doc/qmail doc)
+	mv debian/tmp/var/qmail/man debian/tmp/usr/man && \
+		rm -r debian/tmp/usr/man/cat?
+# Move /var/qmail/bin programs to either /usr/bin or /usr/sbin
+	bash debian/debianize-binary-tree
+# Create /usr/lib/sendmail symlink for backward compatibility.
+	ln -s ../sbin/sendmail debian/tmp/usr/lib/sendmail
+# Copy qmailconfig and its helper programs...
+	install -o root -g root -m 755 dnsfq debian/tmp/usr/lib/qmail/qmailconfig-dnsfq
+	install -o root -g root -m 755 dnsip debian/tmp/usr/lib/qmail/qmailconfig-dnsip
+	install -o root -g root -m 755 ipmeprint debian/tmp/usr/lib/qmail/qmailconfig-ipmeprint
+	install -o root -g root -m 755 dnsptr debian/tmp/usr/lib/qmail/qmailconfig-dnsptr
+# install qmail-procmail script
+	install -o root -g root -m 755 debian/qmail-procmail debian/tmp/usr/sbin/qmail-procmail
+# install newaliases script
+	install -o root -g root -m 755 debian/newaliases debian/tmp/usr/bin/newaliases
+# install eliminate-dups script
+	install -o root -g root -m 755 debian/eliminate-dups debian/tmp/usr/lib/qmail/eliminate-dups
+# install default users/assign
+	install -o root -g root -m 644 debian/users-assign debian/tmp/var/qmail/users/assign
+# (This one is a bit of a kludge...)
+	sed -e 's|./hostname|hostname|g' \
+	    -e 's|\./dnsptr|/usr/lib/qmail/qmailconfig-dnsptr|g' \
+	    -e 's|\./dnsip|/usr/lib/qmail/qmailconfig-dnsip|g' \
+	    -e 's|\./dnsfq|/usr/lib/qmail/qmailconfig-dnsfq|g' \
+	    -e 's|\./ipmeprint|/usr/lib/qmail/qmailconfig-ipmeprint|g' \
+		qmail-config >debian/tmp/usr/lib/qmail/qmailconfig
+	chmod 755 debian/tmp/usr/lib/qmail/qmailconfig
+# Install /etc/init.d/qmail
+	install -o root -g root -m 755 debian/qmail debian/tmp/etc/init.d/qmail
+# Copy /usr/doc/qmail files.
+	install -o root -g root -m 644 debian/changelog debian/tmp/usr/doc/qmail/changelog.Debian
+# do the stuff for qmail-src
+	cp ../qmail_$(PKG_UPVER).orig.tar.gz ../qmail_$(PKG_VER).diff.gz \
+		 ../qmail_$(PKG_VER).dsc debian/qmail-src/usr/src/qmail-src
+	install -m 755 debian/build-qmail debian/qmail-src/usr/bin
+	install debian/copyright debian/qmail-src/usr/doc/qmail-src
+	install debian/qmail-src.README debian/qmail-src/usr/doc/qmail-src/README
+	debstd -m CHANGES BLURB* FAQ INTERNALS README RFC* \
+		SECURITY INSTALL.* SYSDEPS THANKS THOUGHTS TODO
+# Correct permissions of binaries and manpages...
+	chmod go+rx debian/tmp/usr/*bin/*
+	chown -R root.root debian/tmp/usr/man
+
+	dpkg-gencontrol -pqmail
+# And finally, build the Debian package!
+	dpkg --build debian/tmp ..
+
+define checkdir
+	test -f qmail-send.c -a -f debian/rules
+endef
+
+binary:	binary-indep binary-arch
+
+source diff:
+	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
+
+checkroot:
+	$(checkdir)
+	test "`whoami`" = root
+
+.PHONY: binary binary-arch binary-indep clean checkroot

@@ -76,6 +76,7 @@ void hier()
   c(auto_qmail,"boot","binm3+df",auto_uido,auto_gidq,0755);
 
   c(auto_qmail,"doc","FAQ",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","README.qregex",auto_uido,auto_gidq,0644);
   c(auto_qmail,"doc","UPGRADE",auto_uido,auto_gidq,0644);
   c(auto_qmail,"doc","SENDMAIL",auto_uido,auto_gidq,0644);
   c(auto_qmail,"doc","INSTALL",auto_uido,auto_gidq,0644);

@@ -1,0 +1,114 @@
+#!/usr/bin/perl --
+# Test message script for debian's Qmail distribution.
+# Copyright 1994 Ian Jackson.  There is NO WARRANTY.
+# See /usr/doc/qmail/copyright
+
+$mayremote=1;
+$|=1;
+
+$_= shift(@ARGV);
+if ($_ eq '--allowremote') { $mayremote=1; }
+elsif ($_ eq '--localonly') { $mayremote=0; }
+else { die "usage: qmailtest --localonly | --allowremote\n"; }
+
+$halvestrand='linux-counter@uninett.no';
+
+$visiblename='';
+if (open(C,"/etc/qmail/defaulthost") || open(C,"/etc/qmail/me")) {
+    $visiblename = <C> ;
+    chomp $visiblename ;
+}
+
+if ($mayremote) {
+    $msg= length($visiblename)
+        ?
+"
+Would you like to send a test message now ?  Select one of:
+
+ Return or Y  Yes, test offsite delivery with a message to Harald Alvestrand's
+               Linux Counter project - you should then receive an autoreply
+               to postmaster\@$visiblename.
+
+              Do not use this option until mail routing to your machine has
+               been properly enabled, please !
+
+     L        Just a local message from root\@$visiblename
+               to postmaster\@$visiblename.
+
+     N        No, thanks.  (You can do this later using /usr/sbin/smailtest.)
+
+Send a test message now ?  (y/l/n)    "
+        :
+"
+Would you like to send a test message now ?  Select one of:
+
+ Return or Y  Yes, test offsite delivery with a message to Harald Alvestrand's
+               Linux Counter project - you should then receive an autoreply.
+
+              Do not use this option until mail routing to your machine has
+               been properly enabled, please !
+
+     L        Just a local message to \`root' from \`postmaster'.
+
+     N        No, thanks.  (You can do this later using /usr/sbin/smailtest.)
+
+Send a test message now ?  (y/l/n)    ";
+    $accept= 'yln';
+} else {
+    $msg=
+"Would you like to send a test message from `root' to `postmaster' ?
+Send a test message now ?  (y/n)     ";
+    $accept= 'yn';
+}
+
+do {
+    print $msg;
+    $_= <STDIN>;
+    s/\s+$//; s/^\s+//;
+} while (!m/^[$accept]?$/i);
+
+exit 0 if m/^n/i;
+
+chop($d=`date`);
+
+if (!$mayremote || m/^l/i) {
+    $message=
+"From: root
+To: postmaster
+Subject: Qmail system installation test message
+
+This is the test message you were promised.
+It was sent at $d.
+
+If you want to send a remote test message run \`smailtest' again.
+";
+} else {
+    chop($host=`hostname --fqdn`);
+    $message=
+"From: postmaster
+To: $halvestrand
+Subject: Linux mail system installation auto-registration/test
+
+This message was sent at $d
+to test this system's mailer and to register its use of
+Qmail under a Debian Linux System.
+
+//echo
+//machine
+name: $host
+distribution: Debian 1.3.1
+mailer: Qmail 1.01
+//end
+";
+}
+
+open(P,"|/usr/sbin/sendmail -oem -odi -t -oi") || die "pipe to smail: $!\n";
+print(P $message) || die "write to qmail: $!\n";
+$!=0; close(P); $? && die "qmail failed $?/$!\n";
+
+print "
+Test message sent.
+
+";
+
+exit 0;

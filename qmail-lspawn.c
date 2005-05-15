@@ -139,7 +139,7 @@ char *local;
   }
 
  if (pipe(pi) == -1) _exit(QLX_SYS);
- args[0] = "bin/qmail-getpw";
+ args[0] = "/usr/sbin/qmail-getpw";
  args[1] = local;
  args[2] = 0;
  switch(gpwpid = vfork())
@@ -191,7 +191,7 @@ char *s; char *r; int at;
    x = nughde.s;
    xlen = nughde.len;
 
-   args[0] = "bin/qmail-local";
+   args[0] = "/usr/sbin/qmail-local";
    args[1] = "--";
    args[2] = x;
    n = byte_chr(x,xlen,0); if (n++ == xlen) _exit(QLX_USAGE); x += n; xlen -= n;

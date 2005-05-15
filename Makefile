@@ -263,7 +263,7 @@ makelib cdbmake_pack.o cdbmake_hash.o cdbmake_add.o
 	cdbmake_add.o
 
 cdbmake_add.o: \
-compile cdbmake_add.c cdbmake.h uint32.h
+compile cdbmake_add.c cdbmake.h alloc.h uint32.h
 	./compile cdbmake_add.c
 
 cdbmake_hash.o: \
@@ -1483,12 +1483,12 @@ load qmail-send.o qsutil.o control.o constmap.o newfield.o prioq.o \
 trigger.o fmtqfn.o quote.o now.o readsubdir.o qmail.o date822fmt.o \
 datetime.a case.a ndelay.a getln.a wait.a seek.a fd.a sig.a open.a \
 lock.a stralloc.a alloc.a substdio.a error.a str.a fs.a auto_qmail.o \
-auto_split.o
+auto_split.o env.a
 	./load qmail-send qsutil.o control.o constmap.o newfield.o \
 	prioq.o trigger.o fmtqfn.o quote.o now.o readsubdir.o \
 	qmail.o date822fmt.o datetime.a case.a ndelay.a getln.a \
 	wait.a seek.a fd.a sig.a open.a lock.a stralloc.a alloc.a \
-	substdio.a error.a str.a fs.a auto_qmail.o auto_split.o 
+	substdio.a error.a str.a fs.a auto_qmail.o auto_split.o env.a
 
 qmail-send.0: \
 qmail-send.8
@@ -1532,16 +1532,16 @@ auto_split.h
 	./compile qmail-showctl.c
 
 qmail-smtpd: \
-load qmail-smtpd.o rcpthosts.o commands.o timeoutread.o \
+load qmail-smtpd.o rcpthosts.o qregex.o commands.o timeoutread.o \
 timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o received.o \
 date822fmt.o now.o qmail.o cdb.a fd.a wait.a datetime.a getln.a \
-open.a sig.a case.a env.a stralloc.a alloc.a substdio.a error.a str.a \
+open.a sig.a case.a env.a stralloc.a alloc.a strerr.a substdio.a error.a str.a \
 fs.a auto_qmail.o socket.lib
-	./load qmail-smtpd rcpthosts.o commands.o timeoutread.o \
+	./load qmail-smtpd qregex.o rcpthosts.o commands.o timeoutread.o \
 	timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o \
 	received.o date822fmt.o now.o qmail.o cdb.a fd.a wait.a \
 	datetime.a getln.a open.a sig.a case.a env.a stralloc.a \
-	alloc.a substdio.a error.a str.a fs.a auto_qmail.o  `cat \
+	alloc.a strerr.a substdio.a error.a str.a fs.a auto_qmail.o  `cat \
 	socket.lib`
 
 qmail-smtpd.0: \
@@ -1680,6 +1680,10 @@ rcpthosts.o: \
 compile rcpthosts.c cdb.h uint32.h byte.h open.h error.h control.h \
 constmap.h stralloc.h gen_alloc.h rcpthosts.h
 	./compile rcpthosts.c
+
+qregex.o: \
+compile qregex.c qregex.h
+	./compile qregex.c
 
 readsubdir.o: \
 compile readsubdir.c readsubdir.h direntry.h fmt.h scan.h str.h \
@@ -1892,7 +1896,7 @@ trylsock.c compile load
 
 spawn.o: \
 compile chkspawn spawn.c sig.h wait.h substdio.h byte.h str.h \
-stralloc.h gen_alloc.h select.h exit.h coe.h open.h error.h \
+stralloc.h gen_alloc.h select.h exit.h alloc.h coe.h open.h error.h \
 auto_qmail.h auto_uids.h auto_spawn.h
 	./chkspawn
 	./compile spawn.c

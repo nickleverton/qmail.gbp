@@ -1,0 +1,69 @@
+Template: qmail/readme
+Type: note
+Description: README
+ Before making any changes to your qmail configuration, please read
+ /usr/share/doc/qmail/README.Debian.gz.  This contains a description of the 
+ differences bewtween other mailers on Debian, qmail on Debian, and qmail on 
+ other systems.
+ .
+ If you were using sendmail (or smail) previously, you will also want to read
+ the "qmail-upgrade" manpage, which details user-visible differences between
+ sendmail and qmail.
+ .
+ If you are new to qmail, you will want to at least peruse the qmail FAQ, which
+ can be found in /usr/doc/qmail
+
+Template: qmail/start
+Type: select
+Choices: yes, no
+Description: Do you want to start qmail now?
+
+Template: qmail/reboot
+Type: note
+Description: Qmail will be started at the next reboot.
+ Or you can start qmail manually when
+ you are ready by typing (as root) "/etc/init.d/qmail start" at a shell prompt.
+
+Template: qmail/userpurge
+Type: select
+Choices: yes, no
+Description: Remove qmail users during a purge?
+
+Template: qmail/recipientmap
+Type: note
+Description: WARNING!
+ recipientmap is gone from qmail-1.03. The virtualdomains mechanism
+ has been expanded to support virtual users.  You will need to fix your setup.
+
+Template: qmail/qlist
+Type: note
+Description: WARNING!
+ qlist has been split into a separate package by Dan Bernstein (the
+ author of qmail) since qmail-1.02.
+ .
+ I was not planning on debianising qlist, because ezmlm does a better job,
+ so if you still want qlist, you can either get it direct from
+ http://pobox.com/~djb/qlist.html
+ .
+ Please check in /usr/doc/qmail and the man pages for changes since qmail 1.01
+
+Template: qmail/inetd
+Type: note
+Description: inetd.conf changes
+ inetd does not handle qmail terribly effectively, so I have decided
+ to make the default instalation use tcpserver from ucspi-tcp instead.
+ .
+ For this reason, I have disabled the smtp line in /etc/inetd.conf.
+ .
+ This means that you must configure things such as RELAYCLIENT using
+ /etc/tcp.smtp, rather than hosts allow (see /usr/doc/qmail/README for details)
+
+Template: qmail/tcpupdate
+Type: note
+Description: Updating /etc/tcp.smtp database for tcpserver
+
+Template: qmail/override
+Type: select
+Choices: yes, no
+Description: Pre-existing qmail installation detected.  Override?
+

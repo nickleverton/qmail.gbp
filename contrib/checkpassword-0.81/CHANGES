@@ -1,0 +1,12 @@
+19981121 version: checkpassword 0.81, beta.
+19981121 portability problem: some Linux systems _simultaneously_
+         support shadow passwords and non-shadow passwords. impact:
+	 checkpassword would see only the shadow passwords. fix: in
+	 doit(), use getpwnam() password if getspnam() fails (except
+	 with ETXTBSY). tnx to several people.
+19981121 portability problem: AIX needs -ls for getuserpw(). impact:
+         couldn't compile. fix: check for -ls; also use in hasuserpw.h.
+19981121 portability problem: Linux systems with libc5 incorrectly
+         return EEXIST for mkdir("/",...). impact: couldn't install.
+	 fix: don't bother installing anything except checkpassword.
+19981103 version: checkpassword 0.80, beta.

@@ -1,0 +1,4 @@
+/etc/init.d/qmail
+/etc/qmail/users/assign
+/etc/tcp.smtp
+/etc/qmail/rcpthosts

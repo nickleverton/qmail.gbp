@@ -19,7 +19,7 @@ void die_usage()
   _exit(100);
 }
 
-char *smtpdarg[] = { "bin/qmail-smtpd", 0 };
+char *smtpdarg[] = { "/usr/sbin/qmail-smtpd", 0 };
 void smtpd()
 {
   if (!env_get("PROTO")) {
@@ -37,7 +37,7 @@ void smtpd()
   _exit(111);
 }
 
-char *qreadarg[] = { "bin/qmail-qread", 0 };
+char *qreadarg[] = { "/usr/sbin/qmail-qread", 0 };
 void mailq()
 {
   execv(*qreadarg,qreadarg);
@@ -113,7 +113,7 @@ char **argv;
   if (!qiargv) nomem();
  
   arg = qiargv;
-  *arg++ = "bin/qmail-inject";
+  *arg++ = "/usr/sbin/qmail-inject";
   *arg++ = (flagh ? "-H" : "-a");
   if (sender) {
     *arg++ = "-f";

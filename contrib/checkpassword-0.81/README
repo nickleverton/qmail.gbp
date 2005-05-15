@@ -1,0 +1,21 @@
+checkpassword 0.81, beta.
+19981121
+D. J. Bernstein, djb@pobox.com
+http://pobox.com/~djb/checkpwd.html
+
+checkpassword provides a simple, uniform password-checking interface
+to all root applications. See BLURB for a more detailed advertisement.
+
+INSTALL says how to set up and test checkpassword.
+
+The checkpassword code is in the public domain.
+
+The rest of this file is a list of systypes where various versions of
+checkpassword have been reported to work.
+
+0.80: bsd.os-2.0.1-:i386-:-:pentium-:-
+0.80: linux-2.0.35-:i386-:-:i486-:- (tnx PJR)
+0.80: linux-2.0.35-:i386-:-:ppro-:- (tnx JRDM)
+0.80: linux-2.1.128-:alpha-:-:alpha-:- (tnx PJR)
+0.80: netbsd-1.3h-:i386-:-:intel.pentium.(p54c).(586-class)-:- (tnx GCW)
+0.80: sunos-5.4-generic-:sparc-:sun4-:sun4m-:sun4m-

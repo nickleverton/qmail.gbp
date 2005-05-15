@@ -1,0 +1,65 @@
+diff -ru qmail-1.03.orig/contrib/checkpassword-0.76/Makefile qmail-1.03/contrib/checkpassword-0.76/Makefile
+--- qmail-1.03.orig/contrib/checkpassword-0.76/Makefile Thu Oct 14 16:51:32 1999
++++ qmail-1.03/contrib/checkpassword-0.76/Makefile      Thu Oct 14 17:09:27 1999
+@@ -6,7 +6,7 @@
+ SHADOWLIBS=-lcrypt
+ SHADOWOPTS=-DPW_SHADOW
+ 
+-CC=cc $(SHADOWOPTS)
++CC=cc $(SHADOWOPTS) -DALL_GROUPS
+ LD=cc -s
+ 
+ all: checkpassword
+Only in qmail-1.03/contrib/checkpassword-0.76: checkpassword
+diff -ru qmail-1.03.orig/contrib/checkpassword-0.76/checkpassword.c qmail-1.03/contrib/checkpassword-0.76/checkpassword.c
+--- qmail-1.03.orig/contrib/checkpassword-0.76/checkpassword.c  Thu Oct 14 16:51:32 1999
++++ qmail-1.03/contrib/checkpassword-0.76/checkpassword.c       Thu Oct 14 17:50:26 1999
+@@ -1,4 +1,5 @@
+ #include <pwd.h>
++#include <grp.h>
+ #ifdef PW_SHADOW
+ #include <shadow.h>
+ #endif
+@@ -36,6 +37,12 @@
+ #ifdef AIX
+  struct userpw *spw;
+ #endif
++#ifdef ALL_GROUPS
++#define MAX_GROUPS 32
++ int groups[MAX_GROUPS];
++ int num_groups = 0;
++ struct group *gr;
++#endif
+  char *login;
+  char *password;
+  char *stored;
+@@ -86,6 +93,27 @@
+ #endif
+ 
+  encrypted = crypt(password,stored);
++
++#ifdef ALL_GROUPS
++ groups[0] = pw->pw_gid;
++ num_groups = 1;
++ setgrent();
++ while( (gr = getgrent()) )
++  {
++   for(i = 0; gr->gr_mem[i]; i++)
++    {
++     if(!strcmp(gr->gr_mem[i], login))
++      {
++       if(gr->gr_gid != groups[0] && num_groups < MAX_GROUPS)
++        {
++         groups[num_groups] = gr->gr_gid;
++         num_groups++;
++        }
++      }
++    }
++  }
++ if (setgroups(num_groups, groups) == -1) _exit(1);
++#endif 
+ 
+  for (i = 0;i < sizeof(up);++i) up[i] = 0;
+ 
+
+

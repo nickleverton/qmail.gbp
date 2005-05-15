@@ -1,0 +1,28 @@
+#!/bin/sh -e
+
+# Source the debconf library
+. /usr/share/debconf/confmodule
+
+if [ "$1" = "configure" ]; then
+        if [ -d /usr/doc -a ! -e /usr/doc/qmail-src -a -d /usr/share/doc/qmail-src ]; then
+                ln -sf ../share/doc/qmail-src /usr/doc/qmail-src
+        fi
+fi
+
+# Previous informational message removed in favor of debconf
+
+# Code snippet courtesy of Wichert Akkerman
+
+if ! grep -q '^qmaild:' /etc/passwd ; then
+        echo "No qmail accounts present, creating them now"
+        addgroup --gid 64010 qmail
+        adduser --system --no-create-home --uid 64010 --gid 65534 --disabled-password --home /var/qmail/alias --gecos "qmail alias" alias
+        adduser --system --no-create-home --uid 64011 --gid 65534 --disabled-password --home /var/qmail --gecos "qmail daemon" qmaild
+        adduser --system --no-create-home --uid 64012 --gid 64010 --disabled-password --home /var/qmail --gecos "qmail send" qmails
+        adduser --system --no-create-home --uid 64013 --gid 64010 --disabled-password --home /var/qmail --gecos "qmail remote" qmailr
+        adduser --system --no-create-home --uid 64014 --gid 64010 --disabled-password --home /var/qmail --gecos "qmail queue" qmailq
+        adduser --system --no-create-home --uid 64015 --gid 65534 --disabled-password --home /var/qmail --gecos "qmail log" qmaill
+        adduser --system --no-create-home --uid 64016 --gid 65534 --disabled-password --home /var/qmail --gecos "qmail pw" qmailp
+fi
+
+exit 0

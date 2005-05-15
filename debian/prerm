@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+require DebianNet;
+
+$| = 1;
+
+$action = shift;
+
+if ( $action eq 'failed-upgrade' ) {
+    exit 1;
+}
+
+if ( $action eq 'upgrade'  or $action eq 'deconfigure' ) {
+    system("/etc/init.d/qmail stop");
+    exit $? if $?;
+    DebianNet::disable_service('smtp');
+    exit 0;
+}
+
+if ( $action eq 'remove' ) {
+    # Ask for confirmation if there are still messages in qmail's queue.
+    $mesg_inqueue = `find /var/qmail/queue/mess -type f -print | wc -l`;
+    $mesg_inqueue =~ s/\s//g;
+    $mesg_unprocessed = `find /var/qmail/queue/todo -type f -print | wc -l`;
+    $mesg_unprocessed =~ s/\s//g;
+
+    if ( $mesg_inqueue != 0 || $mesg_unprocessed != 0 ) {
+	print STDERR <<EOT;
+There are still messages in qmail's queue. You probably want to wait until
+qmail's queue is empty before removing the qmail package. Otherwise 
+the messages currently waiting in the queue will not be delivered or will be 
+lost. (\`qmail-qstat' will tell you the number of messages in qmail's queue.)
+
+EOT
+
+        print STDERR 'Do you still want to proceed and remove the qmail package? [y/N] ';
+	my $answer = <STDIN>;
+	exit 1 unless $answer =~ /^\s*[yY]/;
+    }
+
+    # Remove qmail-smtpd from inetd.conf
+    DebianNet::remove_service('smtp\s+stream\s+tcp\s+nowait\s+qmaild.*/usr/sbin/qmail-smtpd');
+    
+    # Stop qmail process.
+    system("/etc/init.d/qmail stop");
+    exit $? if $?;
+}
+
+exit 0;
