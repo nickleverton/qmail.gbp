@@ -3,12 +3,6 @@
 # Source the debconf library
 . /usr/share/debconf/confmodule
 
-if [ "$1" = "configure" ]; then
-        if [ -d /usr/doc -a ! -e /usr/doc/qmail-src -a -d /usr/share/doc/qmail-src ]; then
-                ln -sf ../share/doc/qmail-src /usr/doc/qmail-src
-        fi
-fi
-
 # Previous informational message removed in favor of debconf
 
 # Code snippet courtesy of Wichert Akkerman

@@ -67,7 +67,8 @@ and when programs write to that file they are expected to lock the
 file to prevent another process from accessing it at the same time, and
 thus corrupting your mail file.
 
-For reasons explained in /usr/doc/qmail/INSTALL.mbox, qmail does not do this.
+For reasons explained in /usr/share/doc/qmail/INSTALL.mbox, qmail does
+not do this.
 
 The default setup uses /usr/sbin/qmail-procmail to perform the final
 delivery of mail with appropriate dot-locking to prevent loss of mail.
@@ -90,7 +91,7 @@ system would consider the file to be unlocked, and would leave you
 open to mail loss.
 
 Personally, I'd recommend moving to Maildir/ format if you can.  Read
-the files in /usr/doc/qmail to find out more.
+the files in /usr/share/doc/qmail to find out more.
 
 ---
 
@@ -125,7 +126,7 @@ The default /etc/tcp.smtp file contains a single line:
   127.0.0.1:allow,RELAYCLIENT=""
 
 which permits clients on the local machine to use this as a mail relay.  For
-more information, look at question 5.5 of the FAQ (/usr/doc/qmail/FAQ.gz)
+more information, look at question 5.5 of the FAQ (/usr/share/doc/qmail/FAQ.gz)
 
 ---
 Postmaster mail:
@@ -167,3 +168,29 @@ smtp: ALL: twist { { /usr/bin/tcp-env /usr/sbin/qmail-smtpd 1>&3;} 2>&1|splogger
     syslog, rather than mucking up the SMTP connection.
 
 Phil Hands <phil@hands.com>
+
+=============
+
+To build qmail binary package, you have to run
+         build-qmail
+
+=============
+
+WARNING! WARNING! WARNING!
+ The binary packages built by build-qmail are
+ dependant on the uid and gid's of the system
+ that the package was built on.
+ 
+ If you are building/installing qmail for the
+ first time, I highly recommend you check your
+ /etc/passwd, /etc/shadow, & /etc/group files
+ and remove ANY existing qmail uid or gid's and
+ re-install qmail-src.  If you choose not to,
+ it may not work!
+
+=============
+ 
+QMail depends on the ucspi-tcp binary package before it can be installed.
+
+If you have not already installed ucspi-tcp-src and built ucspi-tcp, I suggest
+you do that task first before installing the finished qmail package.

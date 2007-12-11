@@ -244,24 +244,6 @@ if ( $action eq 'install' ) {
     }
 } elsif ($action eq 'upgrade') {
     $old_version = shift;
-    if ($old_version =~ /1.02/ ) {
-	debug("You are upgrading from version 1.02 \n");
-	debug("Moving /var/qmail/users to /etc/qmail/users\n");
-	`mkdir -p /etc/qmail/users`;
-	`tar -cSpf - -C /var/qmail/users . | tar -xvSpf - -C /etc/qmail/users && rm -rf /var/qmail/users`;
-        debug("Moving /var/qmail/alias to /var/lib/qmail/alias\n");
-	`mkdir -p /var/lib/qmail/alias`;
-	`touch /var/qmail/alias/tmp`;
-	`tar -cSpf - -C /var/qmail/alias . | tar -xvSpf - -C /var/lib/qmail/alias && rm -rf /var/qmail/alias`;
-	`rm -rf /var/lib/qmail/alias/tmp`;
-	debug("Moving /var/qmail/doc to /usr/share/doc/qmail\n");
-	`mkdir -p /usr/share/doc/qmail`;
-	`tar -cSpf - -C /var/qmail/doc . | tar -xvSpf - -C /usr/doc/qmail && rm -rf /var/qmail/doc`;
-	debug("Moving /var/qmail/boot to /usr/doc/qmail/examples/boot\n");
-	`mkdir -p /usr/share/doc/qmail/examples`;
-	`tar -cSpf - -C /var/qmail/boot . | tar -xvSpf - -C /usr/share/doc/qmail/examples && rm -rf /var/qmail/boot`;
-    }
-
      if ($old_version =~ /1.03/ ) {
      	debug("You are upgrading from version 1.03 \n");
 	debug("Checking control files ... \n");

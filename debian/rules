@@ -7,7 +7,10 @@ PKG_VER	  = $(shell perl -e 'print <> =~ /\((.*)\)/' debian/changelog)
 PKG_UPVER = $(shell perl -e 'print <> =~ /\((.*)-[^-]*\)/' debian/changelog)
 INSTALL   = '/usr/bin/install'
 
-build:	checkdir
+build:	binary-src
+	touch build
+
+buildbinary:	checkdir
 	if fgrep QMAIL/bin *.sh >/dev/null; then \
 	    echo >&2 "You must run debian/debianize-source-tree first!"; \
 	    exit 1; \
@@ -19,7 +22,7 @@ build:	checkdir
 	# This has been removed.  This is because I have been forced to
 	# change the qmail uid's & gid's
 	#@diff -u debian/debian-default_uids.c auto_uids.c || ( echo -e "\nError:\n Your system has user/group ids that differ from the debian default.\n Please rectify this.  The easiest way to do this is normally to cut&paste\n the qmail sections from /etc/passwd.dpkg-dist and /etc/group.dpkg-dist,\n into /etc/passwd and /etc/group respectively (relpacing the old values).\n" ; exit 1 )
-	touch build
+	touch buildbinary
 
 clean:	checkdir
 	-rm -f build
@@ -33,13 +36,12 @@ clean:	checkdir
 binary-indep: checkroot build
 	#nothing to be done
 
-binary-arch: checkroot build
+binary-arch: checkroot buildbinary
 	-rm -rf debian/substvars debian/tmp
 # Make the directory tree and copy qmail files.
 	$(INSTALL) -d debian/tmp/DEBIAN \
 		debian/tmp/etc/init.d \
 		debian/tmp/usr/share/doc/qmail \
-		debian/tmp/usr/doc \
 		debian/tmp/usr/share/doc/qmail/examples \
 		debian/tmp/var/qmail \
 		debian/tmp/etc/qmail \
@@ -70,7 +72,6 @@ binary-arch: checkroot build
 	(cd debian/tmp/var/qmail && ln -s /usr/share/doc/qmail/examples/boot boot)
 	(cd debian/tmp/var/qmail && ln -s /var/lib/qmail/alias alias)
 	(cd debian/tmp/var/qmail && ln -s /etc/qmail/users users)
-	(cd debian/tmp/usr/doc && ln -s /usr/share/doc/qmail qmail)
 	mv debian/tmp/var/qmail/man debian/tmp/usr/man && \
 		rm -r debian/tmp/usr/man/cat?
 # Move /var/qmail/bin programs to either /usr/bin or /usr/sbin
@@ -154,7 +155,7 @@ binary-arch: checkroot build
 # -- here are the bits for the -src package
 TMPSRC = debian/tmp-src
 
-binary-src: checkroot checkdir debian/control \
+binary-src: checkdir debian/control \
 ../$(PACKAGE)_$(PKG_UPVER).orig.tar.gz \
 ../$(PACKAGE)_$(PKG_VER).dsc ../$(PACKAGE)_$(PKG_VER).diff.gz
 	-rm -rf $(TMPSRC) debian/files
@@ -181,8 +182,8 @@ binary-src: checkroot checkdir debian/control \
 	gzip -9fr $(TMPSRC)/usr/share/doc/
 	$(INSTALL) -m 0644 debian/copyright $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/
 	# Install debconf files
-	cp debian/qmail-src.config $(TMPSRC)/DEBIAN/config
-	cp debian/qmail-src.templates $(TMPSRC)/DEBIAN/templates
+	#cp debian/qmail-src.config $(TMPSRC)/DEBIAN/config
+	#cp debian/qmail-src.templates $(TMPSRC)/DEBIAN/templates
 
 	dpkg-gencontrol -isp -p$(PACKAGE)-src -P$(TMPSRC)
 	chown -R root.root $(TMPSRC)
@@ -198,7 +199,7 @@ debian/control: debian/control.real
 	debian/rules clean
 	cd ..; dpkg-source -b $(PACKAGE)-$(PKG_UPVER)
 
-binary:	binary-indep binary-arch binary-src
+binary:	binary-src
 
 source diff:
 	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false

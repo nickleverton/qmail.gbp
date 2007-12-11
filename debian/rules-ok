@@ -99,7 +99,7 @@ define checkdir
 	test -f qmail-send.c -a -f debian/rules
 endef
 
-binary:	binary-indep binary-arch
+binary:	binary-indep
 
 source diff:
 	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false

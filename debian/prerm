@@ -1,6 +1,14 @@
 #!/usr/bin/perl
 
-require DebianNet;
+$hassmtpininetd = 0;
+if ( -e "/etc/inetd.conf" ) {
+    system('grep "^ *[^#].*\<smtp\>" /etc/inetd.conf');
+    if ( ! $? ) {
+        $hassmtpininetd = 1;
+    }
+}
+
+require DebianNet if ( $hassmtpininetd );
 
 $| = 1;
 
@@ -13,7 +21,7 @@ if ( $action eq 'failed-upgrade' ) {
 if ( $action eq 'upgrade'  or $action eq 'deconfigure' ) {
     system("/etc/init.d/qmail stop");
     exit $? if $?;
-    DebianNet::disable_service('smtp');
+    DebianNet::disable_service('smtp') if ( $hassmtpininetd );
     exit 0;
 }
 
@@ -39,7 +47,7 @@ EOT
     }
 
     # Remove qmail-smtpd from inetd.conf
-    DebianNet::remove_service('smtp\s+stream\s+tcp\s+nowait\s+qmaild.*/usr/sbin/qmail-smtpd');
+    DebianNet::remove_service('smtp\s+stream\s+tcp\s+nowait\s+qmaild.*/usr/sbin/qmail-smtpd') if ( $hassmtpininetd );;
     
     # Stop qmail process.
     system("/etc/init.d/qmail stop");
