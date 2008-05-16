@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+if [ ! -f qmail-start.c ]; then
+    echo "This program must be run from the qmail source directory!"
+    exit 1
+fi
+
+#if [ ! -f qmail-send.8 ]; then
+#    make man
+#fi
+
+for f in `fgrep -l QMAIL/bin *.sh`; do
+    mv $f $f.$$ && sed -e "s,QMAIL/bin/predate,/usr/sbin/predate,g" \
+		       -e "s,QMAIL/bin/sendmail,/usr/sbin/sendmail,g" \
+		       -e "s,QMAIL/bin/maildir2mbox,/usr/bin/maildir2mbox,g" \
+		       -e "s,QMAIL/bin/qmail-inject,/usr/sbin/qmail-inject,g" \
+		       -e "s,exec env - PATH=\"QMAIL/bin:\$PATH\",exec,g" \
+		       -e "s,QMAIL/bin/qlist,/usr/bin/qlist,g" $f.$$ >$f && \
+    rm $f.$$
+done
+
+if ls *.$$ >/dev/null 2>&1; then
+    echo Error during debianization! Some temporary files remain.
+    exit 1
+fi
+
+if fgrep QMAIL/bin *.sh; then
+    echo Error during debianization! Some .sh files still have relative paths.
+    exit 2
+fi
+
+
+if fgrep -q nofiles conf-groups; then
+    if sed <conf-groups >conf-groups.$$ -e '2s/nofiles/nogroup/' && \
+      mv -f conf-groups.$$ conf-groups; then
+	echo The file conf-groups was auto-edited. 
+	echo Please eyeball it to see if the editing was done correctly.
+	echo --- begin conf-groups ----
+	cat conf-groups
+	echo ---  end conf-groups  ----
+	echo
+    else
+	echo Error during auto-editing of conf-groups!
+	exit 3
+    fi
+fi
+
+if grep '\"bin/' *.c | grep -v 'qmail-\(check\|setup\)' >/dev/null; then
+    echo Remember to replace the relative paths by full paths in the following files:
+    grep '\"bin/' *.c | grep -v 'qmail-\(check\|setup\)'
+fi

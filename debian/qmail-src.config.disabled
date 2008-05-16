@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+db_input medium qmail-src/build || true
+db_input high qmail-src/warning || true
+UCSPITCP=`/usr/bin/dpkg --get-selections ucspi-tcp 2>/dev/null | /usr/bin/awk '{ print $2; }'`
+
+if [ "$UCSPITCP" != "install" ]; then
+	db_input high qmail-src/ucspitcp || true
+fi
+
+db_go || true

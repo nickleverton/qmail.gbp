@@ -1,0 +1,213 @@
+#!/usr/bin/make -f 
+#
+# Copyright (C) 1998 Software in the Public Interest <www.debian.org>
+
+PACKAGE	  = $(shell perl -e 'print <> =~ /(\S*)\s/' debian/changelog)
+PKG_VER	  = $(shell perl -e 'print <> =~ /\((.*)\)/' debian/changelog)
+PKG_UPVER = $(shell perl -e 'print <> =~ /\((.*)-[^-]*\)/' debian/changelog)
+INSTALL   = '/usr/bin/install'
+
+build:	binary-src
+	touch build
+
+buildbinary:	checkdir
+	if fgrep QMAIL/bin *.sh >/dev/null; then \
+	    echo >&2 "You must run debian/debianize-source-tree first!"; \
+	    exit 1; \
+	fi
+	$(MAKE) -C contrib/checkpassword-0.90/
+	$(MAKE) man
+	$(MAKE)
+	# check that the local user ID's match the standard ones
+	# This has been removed.  This is because I have been forced to
+	# change the qmail uid's & gid's
+	#@diff -u debian/debian-default_uids.c auto_uids.c || ( echo -e "\nError:\n Your system has user/group ids that differ from the debian default.\n Please rectify this.  The easiest way to do this is normally to cut&paste\n the qmail sections from /etc/passwd.dpkg-dist and /etc/group.dpkg-dist,\n into /etc/passwd and /etc/group respectively (relpacing the old values).\n" ; exit 1 )
+	touch buildbinary
+
+clean:	checkdir
+	-rm -f build
+	-$(MAKE) clean
+	-$(MAKE) clean -C contrib/checkpassword-0.90/
+	-rm `find . -name "*~"`
+	-rm -rf debian/files*
+	-rm -rf `find debian/* -type d -prune`
+	find . \( -name '#*#' -o -name '*~' -o -name DEADJOE -o -name '*.orig' -o -name '*.rej' -o -name '*.bak' -o -name '.*.orig' -o -name '.*.rej' -o -name .SUMS -o -name TAGS -o -name core \) -exec rm -f {} \;
+
+binary-indep: checkroot build
+	#nothing to be done
+
+binary-arch: checkroot buildbinary
+	-rm -rf debian/substvars debian/tmp
+# Make the directory tree and copy qmail files.
+	$(INSTALL) -d debian/tmp/DEBIAN \
+		debian/tmp/etc/init.d \
+		debian/tmp/usr/share/doc/qmail \
+		debian/tmp/usr/share/doc/qmail/examples \
+		debian/tmp/var/qmail \
+		debian/tmp/etc/qmail \
+		debian/tmp/var/spool \
+		debian/tmp/var/lib \
+		debian/tmp/var/lib/qmail \
+		debian/tmp/usr/bin \
+		debian/tmp/usr/sbin \
+		debian/tmp/usr/lib \
+		debian/tmp/usr/lib/qmail
+	#./qmail-hier | ./install debian/tmp/var/qmail
+	./auto-str auto_qmail debian/tmp/var/qmail > auto_qmail.c
+	rm -f install
+	$(MAKE) install
+	./install
+	mv debian/tmp/var/qmail/queue debian/tmp/var/spool/qmail
+	#mv debian/tmp/var/qmail/control/* debian/tmp/etc/qmail
+	mv debian/tmp/var/qmail/alias debian/tmp/var/lib/qmail
+	mv debian/tmp/var/qmail/users debian/tmp/etc/qmail
+	echo localhost > debian/tmp/etc/qmail/rcpthosts
+	mv debian/tmp/var/qmail/doc/* debian/tmp/usr/share/doc/qmail
+	mv debian/tmp/var/qmail/boot debian/tmp/usr/share/doc/qmail/examples
+	rmdir debian/tmp/var/qmail/doc
+	rmdir debian/tmp/var/qmail/control
+	(cd debian/tmp/var/qmail && ln -s /var/spool/qmail queue)
+	(cd debian/tmp/var/qmail && ln -s /etc/qmail control)
+	(cd debian/tmp/var/qmail && ln -s /usr/share/doc/qmail doc)
+	(cd debian/tmp/var/qmail && ln -s /usr/share/doc/qmail/examples/boot boot)
+	(cd debian/tmp/var/qmail && ln -s /var/lib/qmail/alias alias)
+	(cd debian/tmp/var/qmail && ln -s /etc/qmail/users users)
+	mv debian/tmp/var/qmail/man debian/tmp/usr/man && \
+		rm -r debian/tmp/usr/man/cat?
+# Move /var/qmail/bin programs to either /usr/bin or /usr/sbin
+	bash debian/debianize-binary-tree
+# Install checkpassword in /usr/bin
+	$(INSTALL) -o root -g root -m 755 contrib/checkpassword-0.90/checkpassword debian/tmp/usr/bin
+# Install checkpassword manpage
+	$(INSTALL) -o root -g root -m 644 contrib/checkpassword-0.90/checkpassword.8 debian/tmp/usr/man/man8
+# Install mbox2maildir in /usr/bin
+	$(INSTALL) -o root -g root -m 755 contrib/mbox2maildir/mbox2maildir debian/tmp/usr/bin
+# Create /usr/lib/sendmail symlink for backward compatibility.
+	ln -s ../sbin/sendmail debian/tmp/usr/lib/sendmail
+# Copy qmailconfig and its helper programs...
+	$(INSTALL) -o root -g root -m 755 dnsfq debian/tmp/usr/lib/qmail/qmailconfig-dnsfq
+	$(INSTALL) -o root -g root -m 755 dnsip debian/tmp/usr/lib/qmail/qmailconfig-dnsip
+	$(INSTALL) -o root -g root -m 755 ipmeprint debian/tmp/usr/lib/qmail/qmailconfig-ipmeprint
+	$(INSTALL) -o root -g root -m 755 dnsptr debian/tmp/usr/lib/qmail/qmailconfig-dnsptr
+# install qmail-procmail script
+	$(INSTALL) -o root -g root -m 755 debian/qmail-procmail debian/tmp/usr/sbin/qmail-procmail
+# install newaliases script
+	$(INSTALL) -o root -g root -m 755 debian/newaliases debian/tmp/usr/bin/newaliases
+# install eliminate-dups script
+	$(INSTALL) -o root -g root -m 755 debian/eliminate-dups debian/tmp/usr/lib/qmail/eliminate-dups
+# install default users/assign
+	$(INSTALL) -o root -g root -m 644 debian/assign debian/tmp/etc/qmail/users
+# (This one is a bit of a kludge...)
+	sed -e 's|./hostname|hostname|g' \
+	    -e 's|\./dnsptr|/usr/lib/qmail/qmailconfig-dnsptr|g' \
+	    -e 's|\./dnsip|/usr/lib/qmail/qmailconfig-dnsip|g' \
+	    -e 's|\./dnsfq|/usr/lib/qmail/qmailconfig-dnsfq|g' \
+	    -e 's|\./ipmeprint|/usr/lib/qmail/qmailconfig-ipmeprint|g' \
+		config >debian/tmp/usr/lib/qmail/qmailconfig
+	chmod 755 debian/tmp/usr/lib/qmail/qmailconfig
+# Install /etc/init.d/qmail
+	$(INSTALL) -o root -g root -m 755 debian/init.d debian/tmp/etc/init.d/qmail
+# install tcpserver conf file
+	$(INSTALL) -o root -g root -m 644 debian/tcp.smtp debian/tmp/etc
+
+# Copy /usr/share/doc/qmail files.
+	$(INSTALL) -o root -g root -m 644 debian/changelog debian/tmp/usr/share/doc/qmail/changelog.Debian
+	$(INSTALL) -m 644 -p BLURB* FAQ INTERNALS README* PIC.* \
+		SECURITY SENDMAIL SYSDEPS THANKS THOUGHTS TODO UPGRADE \
+		BIN* REMOVE* TEST* VERSION CHANGES \
+		debian/tmp/usr/share/doc/qmail/
+	$(INSTALL) -m 644 -p debian/README.debian debian/tmp/usr/share/doc/qmail/README.Debian
+	$(INSTALL) -m 644 -p debian/TODO debian/tmp/usr/share/doc/qmail/TODO.Debian
+	
+	$(INSTALL) -m 644 -p debian/ip-up.d debian/tmp/usr/share/doc/qmail/examples/ip-up.d
+	$(INSTALL) -m 644 -p debian/logcheck debian/tmp/usr/share/doc/qmail/examples/logcheck.ignore
+	
+	$(INSTALL) -p -m644 debian/changelog debian/tmp/usr/share/doc/qmail/changelog.Debian
+	$(INSTALL) -p -m644 CHANGES debian/tmp/usr/share/doc/qmail/changelog
+	-strip --remove-section=comment --remove-section=note \
+		debian/tmp/usr/bin/* debian/tmp/usr/sbin/* \
+		debian/tmp/usr/lib/*                        2>/dev/null
+	-gzip -fr debian/tmp/usr/share/doc/ debian/tmp/usr/man/
+	$(INSTALL) -m 644 -p debian/copyright debian/tmp/usr/share/doc/qmail/copyright
+# Correct permissions of binaries and manpages...
+	chmod go+rx debian/tmp/usr/*bin/*
+	chown -R root.root debian/tmp/usr/man
+	$(INSTALL) -p -m755 debian/postinst debian/preinst \
+			debian/prerm debian/postrm        debian/tmp/DEBIAN
+	$(INSTALL) -o root -g root -m 644 -p debian/conffiles debian/tmp/DEBIAN/conffiles
+
+	# Install debconf stuff
+	cp debian/qmail.config debian/tmp/DEBIAN/config
+	cp debian/qmail.templates debian/tmp/DEBIAN/templates
+	chmod 755 debian/tmp/DEBIAN/config debian/tmp/DEBIAN/templates
+	chmod u+x debian/*config
+
+	## Install logcheck files
+	#$(INSTALL) -o root -g root -d debian/tmp/etc/logcheck/ignore.d.server
+	#$(INSTALL) -m 600 debian/logcheck debian/tmp/etc/logcheck/ignore.d.server/qmail
+
+	(cd debian/tmp/var/qmail && ln -s /usr/sbin bin)
+	dpkg-shlibdeps -Tdebian/substvars debian/tmp/usr/lib/qmail/* debian/tmp/usr/sbin/* debian/tmp/usr/bin/*
+	dpkg-gencontrol -isp -pqmail -cdebian/control.real
+# And finally, build the Debian package!
+	dpkg --build debian/tmp ..
+
+# -- here are the bits for the -src package
+TMPSRC = debian/tmp-src
+
+binary-src: checkdir debian/control \
+../$(PACKAGE)_$(PKG_UPVER).orig.tar.gz \
+../$(PACKAGE)_$(PKG_VER).dsc ../$(PACKAGE)_$(PKG_VER).diff.gz
+	-rm -rf $(TMPSRC) debian/files
+	
+	$(INSTALL) -d $(TMPSRC)/DEBIAN \
+		$(TMPSRC)/usr/bin \
+		$(TMPSRC)/usr/src/$(PACKAGE)-src \
+		$(TMPSRC)/usr/share/doc/$(PACKAGE)-src
+	$(INSTALL) -m 755 debian/build-PACKAGE $(TMPSRC)/usr/bin/build-$(PACKAGE)
+	$(INSTALL) -m 0644 ../$(PACKAGE)_$(PKG_UPVER).orig.tar.gz \
+			../$(PACKAGE)_$(PKG_VER).dsc \
+			../$(PACKAGE)_$(PKG_VER).diff.gz \
+			$(TMPSRC)/usr/src/$(PACKAGE)-src/
+	sed -e "s/#PACKAGE#/$(PACKAGE)/" debian/src.postinst > $(TMPSRC)/DEBIAN/postinst
+	chmod 755 $(TMPSRC)/DEBIAN/postinst
+	sed -e "s/#PACKAGE#/$(PACKAGE)/" debian/src.prerm > $(TMPSRC)/DEBIAN/prerm
+	chmod 755 $(TMPSRC)/DEBIAN/prerm
+	cp debian/src.postrm $(TMPSRC)/DEBIAN/postrm
+	chmod 755 $(TMPSRC)/DEBIAN/postrm
+		
+	sed -e "s/#PACKAGE#/$(PACKAGE)/" debian/README-src > $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/README.Debian
+	$(INSTALL) -m 0644 debian/changelog $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/changelog.Debian
+	chmod 644 $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/changelog.Debian
+	gzip -9fr $(TMPSRC)/usr/share/doc/
+	$(INSTALL) -m 0644 debian/copyright $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/
+	# Install debconf files
+	#cp debian/qmail-src.config $(TMPSRC)/DEBIAN/config
+	#cp debian/qmail-src.templates $(TMPSRC)/DEBIAN/templates
+
+	dpkg-gencontrol -isp -p$(PACKAGE)-src -P$(TMPSRC)
+	chown -R root.root $(TMPSRC)
+	dpkg --build $(TMPSRC) ..
+
+debian/control: debian/control.real
+	test -f debian/control.real && sed -e "/^Package: $(PACKAGE)-src$$/b" -e "/^Package: /,/^$$/d" debian/control.real > debian/control
+
+../$(PACKAGE)_$(PKG_UPVER).orig.tar.gz:
+	@{ echo "Error: $@ missing"; exit 1; }
+
+../$(PACKAGE)_$(PKG_VER).dsc ../$(PACKAGE)_$(PKG_VER).diff.gz: debian/rules
+	debian/rules clean
+	cd ..; dpkg-source -b $(PACKAGE)-$(PKG_UPVER)
+
+binary:	binary-src
+
+source diff:
+	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
+
+checkdir:
+	@test -f qmail.c -a -f debian/rules
+
+checkroot:	checkdir
+	test "`whoami`" = root
+
+.PHONY: binary binary-arch binary-indep clean checkroot

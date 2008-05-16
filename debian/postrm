@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+use Debconf::Client::ConfModule ':all';
+version('2.0');
+
+$| = 1;
+
+$action = shift @ARGV;
+
+if ( $action eq 'purge' ) {
+    system('update-rc.d qmail remove >/dev/null');
+    system("rm -rf /var/qmail");
+    # Next command removed because it was VERY evil
+    #system("rm -rf /etc/qmail");
+    # This is not -*quite*- so evil ...
+    system("rm -rf /etc/qmail/users");
+    input ("medium","qmail/userpurge");
+    my @ret=go();
+    if ( $ret[0] eq "" ||  $answer =~ /^\s*[yY]/ ) {
+    	system('userdel alias >/dev/null');
+    	system('userdel qmaild >/dev/null');
+    	system('userdel qmails >/dev/null');
+    	system('userdel qmailr >/dev/null');
+    	system('userdel qmailq >/dev/null');
+    	system('userdel qmaill >/dev/null');
+    	system('userdel qmailp >/dev/null');
+    	system('groupdel qmail >/dev/null');
+    }
+    purge();
+
+    exit $?;
+}
+
+if ( $action eq 'abort-install' ) {
+    # Put back old inetd.conf (?)
+    exit 0
+}
+

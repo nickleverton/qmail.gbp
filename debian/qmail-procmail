@@ -1,0 +1,10 @@
+#!/bin/sh
+
+/usr/bin/preline /usr/bin/procmail "$@" && exit 0
+
+# check if procmail returned EX_TEMPFAIL (75)
+[ $? = 75 ] && exit 111
+
+# otherwise return a permanent error
+exit 100
+

@@ -1,0 +1,34 @@
+Source: qmail
+Maintainer: Jon Marler <jmarler@debian.org>
+Section: non-free/mail
+Priority: extra
+Build-Depends: dpkg-dev (>= 1.4.0.20), patch (>= 2.5-0bo1), gcc, make, fakeroot | sudo, groff-base, adduser
+Standards-Version: 3.7.2
+
+Package: qmail-src
+Architecture: all
+Depends: dpkg-dev (>= 1.4.0.20), patch (>= 2.5-0bo1), gcc, make, fakeroot | sudo, groff-base, adduser
+Conflicts: qmail-run, qmail-uids-gids
+Section: non-free/mail
+Recommends: ucspi-tcp-src, procmail
+Description: Source only package for building qmail binary package
+ qmail is a secure Secure, reliable, efficient, simple mail transport system.
+ .
+ Dan Bernstein (qmail's author) only gives permission for qmail to be
+ distributed in source form, or binary for by approval.  This package
+ has been put together to allow people to easily build a qmail binary
+ package for themselves, from source.
+ .
+ To build a binary deb package, first install the qmail-src package, then
+ type the command "build-qmail".  If you try "apt-get source --build qmail-src"
+ only the qmail-src package will be built.  You will need to install qmail-src
+ and type the command "build-qmail" to get a usable binary package of qmail.
+ Also be sure to build and install ucspi-tcp before installing the binary qmail
+ package.  Install the ucspi-tcp-src package to get ucspi-tcp.
+ .
+ This package builds a binary .deb that is FHS compliant and conforms to the
+ Debian standards guidelines.  The resulting binary packages are not suitable
+ for re-distribution.
+ .
+ There are pre-compiled binary packages for qmail available, but they do not
+ conform to the Debian standards, and are not available in the official archive.

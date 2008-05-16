@@ -1,0 +1,95 @@
+diff -u qmail-1.03/debian/README.debian qmail-1.03/debian/README.debian
+--- qmail-1.03/debian/README.debian
++++ qmail-1.03/debian/README.debian
+@@ -67,7 +67,8 @@
+ file to prevent another process from accessing it at the same time, and
+ thus corrupting your mail file.
+ 
+-For reasons explained in /usr/doc/qmail/INSTALL.mbox, qmail does not do this.
++For reasons explained in /usr/share/doc/qmail/INSTALL.mbox, qmail does
++not do this.
+ 
+ The default setup uses /usr/sbin/qmail-procmail to perform the final
+ delivery of mail with appropriate dot-locking to prevent loss of mail.
+@@ -90,7 +91,7 @@
+ open to mail loss.
+ 
+ Personally, I'd recommend moving to Maildir/ format if you can.  Read
+-the files in /usr/doc/qmail to find out more.
++the files in /usr/share/doc/qmail to find out more.
+ 
+ ---
+ 
+@@ -125,7 +126,7 @@
+   127.0.0.1:allow,RELAYCLIENT=""
+ 
+ which permits clients on the local machine to use this as a mail relay.  For
+-more information, look at question 5.5 of the FAQ (/usr/doc/qmail/FAQ.gz)
++more information, look at question 5.5 of the FAQ (/usr/share/doc/qmail/FAQ.gz)
+ 
+ ---
+ Postmaster mail:
+diff -u qmail-1.03/debian/preinst qmail-1.03/debian/preinst
+--- qmail-1.03/debian/preinst
++++ qmail-1.03/debian/preinst
+@@ -244,24 +244,6 @@
+     }
+ } elsif ($action eq 'upgrade') {
+     $old_version = shift;
+-    if ($old_version =~ /1.02/ ) {
+-	debug("You are upgrading from version 1.02 \n");
+-	debug("Moving /var/qmail/users to /etc/qmail/users\n");
+-	`mkdir -p /etc/qmail/users`;
+-	`tar -cSpf - -C /var/qmail/users . | tar -xvSpf - -C /etc/qmail/users && rm -rf /var/qmail/users`;
+-        debug("Moving /var/qmail/alias to /var/lib/qmail/alias\n");
+-	`mkdir -p /var/lib/qmail/alias`;
+-	`touch /var/qmail/alias/tmp`;
+-	`tar -cSpf - -C /var/qmail/alias . | tar -xvSpf - -C /var/lib/qmail/alias && rm -rf /var/qmail/alias`;
+-	`rm -rf /var/lib/qmail/alias/tmp`;
+-	debug("Moving /var/qmail/doc to /usr/share/doc/qmail\n");
+-	`mkdir -p /usr/share/doc/qmail`;
+-	`tar -cSpf - -C /var/qmail/doc . | tar -xvSpf - -C /usr/doc/qmail && rm -rf /var/qmail/doc`;
+-	debug("Moving /var/qmail/boot to /usr/doc/qmail/examples/boot\n");
+-	`mkdir -p /usr/share/doc/qmail/examples`;
+-	`tar -cSpf - -C /var/qmail/boot . | tar -xvSpf - -C /usr/share/doc/qmail/examples && rm -rf /var/qmail/boot`;
+-    }
+-
+      if ($old_version =~ /1.03/ ) {
+      	debug("You are upgrading from version 1.03 \n");
+ 	debug("Checking control files ... \n");
+diff -u qmail-1.03/debian/rules qmail-1.03/debian/rules
+--- qmail-1.03/debian/rules
++++ qmail-1.03/debian/rules
+@@ -42,7 +42,6 @@
+ 	$(INSTALL) -d debian/tmp/DEBIAN \
+ 		debian/tmp/etc/init.d \
+ 		debian/tmp/usr/share/doc/qmail \
+-		debian/tmp/usr/doc \
+ 		debian/tmp/usr/share/doc/qmail/examples \
+ 		debian/tmp/var/qmail \
+ 		debian/tmp/etc/qmail \
+@@ -73,7 +72,6 @@
+ 	(cd debian/tmp/var/qmail && ln -s /usr/share/doc/qmail/examples/boot boot)
+ 	(cd debian/tmp/var/qmail && ln -s /var/lib/qmail/alias alias)
+ 	(cd debian/tmp/var/qmail && ln -s /etc/qmail/users users)
+-	(cd debian/tmp/usr/doc && ln -s /usr/share/doc/qmail qmail)
+ 	mv debian/tmp/var/qmail/man debian/tmp/usr/man && \
+ 		rm -r debian/tmp/usr/man/cat?
+ # Move /var/qmail/bin programs to either /usr/bin or /usr/sbin
+diff -u qmail-1.03/debian/src.postinst qmail-1.03/debian/src.postinst
+--- qmail-1.03/debian/src.postinst
++++ qmail-1.03/debian/src.postinst
+@@ -3,12 +3,6 @@
+ # Source the debconf library
+ . /usr/share/debconf/confmodule
+ 
+-if [ "$1" = "configure" ]; then
+-        if [ -d /usr/doc -a ! -e /usr/doc/qmail-src -a -d /usr/share/doc/qmail-src ]; then
+-                ln -sf ../share/doc/qmail-src /usr/doc/qmail-src
+-        fi
+-fi
+-
+ # Previous informational message removed in favor of debconf
+ 
+ # Code snippet courtesy of Wichert Akkerman
+

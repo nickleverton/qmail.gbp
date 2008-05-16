@@ -1,0 +1,33 @@
+Qmail is Copyright 1996, D. J. Bernstein.
+--
+
+Unfortunately (from SPI's point of view) Dan Bernstein does not include
+a conventional licence for qmail, so instead you must examine his published
+documentation on the subject to determine your rights to use his software.
+
+The right to distribute unmodified copies of the qmail-1.01 source is granted
+here:
+
+  ftp://koobera.math.uic.edu/www/qmail/dist.html
+
+In addition, Dan will approve distribution of specific binary packages, which
+he should have done for the Debian package that contains this file by the time
+you get to read it.
+
+He also states (see ftp://koobera.math.uic.edu/www/softwarelaw.html)
+the following:
+
+  What does all this mean for the free software world? Once you've legally
+  downloaded a program, you can compile it. You can run it. You can modify
+  it. You can distribute your patches for other people to use. If you think
+  you need a license from the copyright holder, you've been bamboozled by
+  Microsoft. As long as you're not distributing the software, you have
+  nothing to worry about.
+
+Of course, this only applies to people under US jurisdiction, but Dan
+claims that similar laws are in effect in most of the countries that
+take any notice of copyright, so I suppose that one can assume that
+this encapsulates his wishes on the subject.
+
+Cheers, Phil.
+<phil@hands.com>

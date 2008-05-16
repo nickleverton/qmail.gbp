@@ -1,0 +1,11 @@
+--- qmail-smtpd.c	1998-06-15 06:53:16.000000000 -0400
++++ qmail-smtpd-fixed.c	2004-01-16 11:55:43.000000000 -0500
+@@ -296,7 +296,7 @@
+   char ch;
+   int state;
+   int flaginheader;
+-  int pos; /* number of bytes since most recent \n, if fih */
++  unsigned int pos; /* number of bytes since most recent \n, if fih */
+   int flagmaybex; /* 1 if this line might match RECEIVED, if fih */
+   int flagmaybey; /* 1 if this line might match \r\n, if fih */
+   int flagmaybez; /* 1 if this line might match DELIVERED, if fih */

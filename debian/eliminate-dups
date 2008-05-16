@@ -1,0 +1,59 @@
+#! /usr/bin/perl
+# Call from a .qmail file as follows:
+#  |/usr/lib/qmail/eliminate-dups Mailbox
+
+$hashname = shift;
+
+use MD5;
+$md5 = new MD5;
+
+$loose = 1;			# loose matching if set.
+
+while(<>) {
+    last if /^$/;
+    next if $ignore_continue && /^\s/;
+    $ignore_continue = 0;
+    if (/^received:/i) {
+	$ignore_continue = 1;
+	next;
+    }
+    if (!$loose) {
+	$headers .= $_;
+	next;
+    }
+    if ($keep_continue && /^\s/) {
+	$headers .= $_;
+	next;
+    }
+    $keep_continue = 0;
+    if (m/^(from|message-id|date):/i) {
+	$headers .= $_;
+	$keep_continue = 1;
+	next;
+    }
+    next;
+}
+
+$md5->add($headers);
+$md5->addfile(STDIN);
+$hash = $md5->hexdigest;
+print "$headersOur hash:$hash\n";
+
+open(HASH, "<$hashname.newer");
+flock(HASH, 2);
+while(<HASH>) { chomp; exit 99 if $_ eq $hash; }
+open(HASH, "<$hashname.older") || die "$0: Cannot open $hashname.older";
+while(<HASH>) { chomp; exit 99 if $_ eq $hash; }
+
+# roll the files once a week.
+if (-M "$hashname.older" > 7) {
+	rename("$hashname.newer", "$hashname.older") || die "$0: Unable to move newer to older";
+}
+
+# add the hash to the "received messages" list.
+open(HASH, ">>$hashname.newer") || die "$0: Cannot append to $hashname.newer";
+print HASH "$hash\n";
+close(HASH);
+
+print "Original message";
+exit 0;

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e 
+
+function startofpath() {
+    if [ -f usr/man/man8/`basename $1`.8 ]; then
+	echo usr/sbin
+    elif [ -f usr/man/man1/`basename $1`.1 ]; then
+	echo usr/bin
+    else
+	case `basename $1` in
+	    elq|pinq|qail|qlist2) echo usr/bin;;
+	    datemail|predate|qmail-home|qsmhook|sendmail|update_tmprsadh) echo usr/sbin;;
+	    *) echo 1>&2 Cannot determine if $1 belongs in sbin or bin;exit 2;;
+	esac
+    fi
+}
+
+test -d debian/tmp || (echo "Could not find debian/tmp directory.";exit 1)
+
+cd debian/tmp
+
+for f in var/qmail/bin/*; do
+    mv $f `startofpath $f`
+done
+
+rmdir var/qmail/bin || ( echo "Could not remove qmail/bin directory!"; exit 3)

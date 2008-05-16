@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+use Debconf::Client::ConfModule ':all';
+version('2.0');
+
+# do not print anything to STDOUT, as debconf will interpret it as a command
+sub debug ($) {
+    my($msg) = @_;
+    print STDERR $msg;
+}
+
+$| = 1;
+
+my $action = shift @ARGV;
+
+my $hostsallow = "/etc/hosts.allow";
+
+if ( $action eq 'configure' or $action eq 'abort-upgrade' or $action eq 'abort-deconfigure' or $action eq 'abort-remove' ) {
+  my $old_version = shift @ARGV;
+  
+  if ( !defined($old_version) || $old_version le "1.01-7" ) {
+    check_hosts_allow();
+    input ("low","qmail/tcpupdate");
+    go();
+    system("/usr/bin/tcprules /etc/tcp.smtp.cdb /etc/tcp.smtp.tmp < /etc/tcp.smtp >/dev/null") ;
+
+  }
+  
+  # Add rc?.d links
+  system('update-rc.d qmail defaults >/dev/null');
+  system("/usr/sbin/qmail-newu >/dev/null");
+  
+  if ( ! -r '/var/qmail/control/me' ) {
+    # send qmailconfig's progress messages to STDERR
+    system("/usr/lib/qmail/qmailconfig 1>&2");
+    if ($? != 0) {
+        debug("qmailconfig failed\n");
+    }
+  }
+ 
+  if ( -l '/etc/qmail/qmail' ) {
+    system("rm /etc/qmail/qmail >/dev/null");
+  }
+  
+  $checkstart = 0 ;
+  if ( $old_version le '1.01-7' ) { 
+    if ( -f '/var/qmail/control/recipientmap' ) {
+      input ("medium","qmail/recipientmap");
+      go();
+    }
+  }
+
+  input ("medium","qmail/qlist");
+  input ("medium","qmail/start");
+  my @ret=go();
+  if ( $ret[0] eq "" ||  $answer =~ /^\s*[yY]/ ) {
+    debug("Starting qmail . . .\n");
+    system("/etc/init.d/qmail start 1>&2");
+  } 
+  else {
+    input ("medium","qmail/reboot");
+    go();
+  }
+
+}
+
+sub check_hosts_allow {
+    if (open(HOSTSA,"$hostsallow")) {
+        @hostsa = <HOSTSA> ;
+	close(HOSTSA) ;
+	if (grep(m/smtp:/,@hostsa)) {
+	    input ("medium","qmail/inetd");
+	    go();
+	}
+    }
+}
+
+exit 0;

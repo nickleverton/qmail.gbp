@@ -1,0 +1,4 @@
+#!/bin/sh
+
+env|egrep -e "(BOUNCEMAIL|TCPREMOTEIP)" >&2
+exec "$@"

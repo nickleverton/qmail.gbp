@@ -14,6 +14,15 @@ must be supplied several environment variables;
 see
 .BR tcp-environ(5) .
 
+If the environment variable
+.B SMTPS
+is non-empty,
+.B qmail-smtpd
+starts a TLS session (to support the deprecated SMTPS protocol,
+normally on port 465). Otherwise,
+.B qmail-smtpd
+offers the STARTTLS extension to ESMTP.
+
 .B qmail-smtpd
 is responsible for counting hops.
 It rejects any message with 100 or more 
@@ -37,11 +46,26 @@ accepts messages that contain long lines or non-ASCII characters,
 even though such messages violate the SMTP protocol.
 .SH "CONTROL FILES"
 .TP 5
+.I badhelo
+Unacceptable HELO/EHLO host names.
+.B qmail-smtpd
+will reject every recipient address for a message if
+the host name is listed in, 
+or matches a POSIX regular expression pattern listed in,
+.IR badhelo .
+If the 
+.B NOBADHELO 
+environment variable is set, then the contents of 
+.IR badhelo 
+will be ignored.
+For more information, please have a look at doc/README.qregex.
+.TP 5
 .I badmailfrom
 Unacceptable envelope sender addresses.
 .B qmail-smtpd
 will reject every recipient address for a message
-if the envelope sender address is listed in
+if the envelope sender address is listed in, or matches a POSIX regular expression
+pattern listed in,
 .IR badmailfrom .
 A line in
 .I badmailfrom
@@ -49,6 +73,45 @@ may be of the form
 .BR @\fIhost ,
 meaning every address at
 .IR host .
+For more information, please have a look at doc/README.qregex.
+
+.TP 5
+.I clientca.pem
+A list of Certifying Authority (CA) certificates that are used to verify
+the client-presented certificates during a TLS-encrypted session.
+
+.TP 5
+.I clientcrl.pem
+A list of Certificate Revocation Lists (CRLs). If present it
+should contain the CRLs of the CAs in 
+.I clientca.pem 
+and client certs will be checked for revocation.
+
+.TP 5
+.I badmailfromnorelay
+Functions the same as the
+.IR badmailfrom
+control file but is read only if the 
+.B RELAYCLIENT 
+environment variable is not set.
+For more information, please have a look at doc/README.qregex.
+.TP 5
+.I badmailto
+Unacceptable envelope recipient addresses.
+.B qmail-smtpd
+will reject every recipient address for a message if the recipient address
+is listed in,
+or matches a POSIX regular expression pattern listed in,
+.IR badmailto .
+For more information, please have a look at doc/README.qregex.
+.TP 5
+.I badmailtonorelay
+Functions the same as the
+.IR badmailto
+control file but is read only if the
+.B RELAYCLIENT
+environment variable is not set.
+For more information, please have a look at doc/README.qregex.
 .TP 5
 .I databytes
 Maximum number of bytes allowed in a message,
@@ -76,6 +139,18 @@ If the environment variable
 .B DATABYTES
 is set, it overrides
 .IR databytes .
+
+.TP 5
+.I dh1024.pem
+If these 1024 bit DH parameters are provided,
+.B qmail-smtpd
+will use them for TLS sessions instead of generating one on-the-fly 
+(which is very timeconsuming).
+.TP 5
+.I dh512.pem
+512 bit counterpart for 
+.B dh1024.pem. 
+
 .TP 5
 .I localiphost
 Replacement host name for local IP addresses.
@@ -151,6 +226,19 @@ may include wildcards:
 
 Envelope recipient addresses without @ signs are
 always allowed through.
+
+.TP 5
+.I rsa512.pem
+If this 512 bit RSA key is provided,
+.B qmail-smtpd
+will use it for TLS sessions instead of generating one on-the-fly.
+
+.TP 5
+.I servercert.pem
+SSL certificate to be presented to clients in TLS-encrypted sessions. 
+Should contain both the certificate and the private key. Certifying Authority
+(CA) and intermediate certificates can be added at the end of the file.
+
 .TP 5
 .I smtpgreeting
 SMTP greeting message.
@@ -169,6 +257,24 @@ Number of seconds
 .B qmail-smtpd
 will wait for each new buffer of data from the remote SMTP client.
 Default: 1200.
+
+.TP 5
+.I tlsclients
+A list of email addresses. When relay rules would reject an incoming message,
+.B qmail-smtpd
+can allow it if the client presents a certificate that can be verified against
+the CA list in
+.I clientca.pem
+and the certificate email address is in
+.IR tlsclients .
+
+.TP 5
+.I tlsserverciphers
+A set of OpenSSL cipher strings. Multiple ciphers contained in a
+string should be separated by a colon. If the environment variable
+.B TLSCIPHERS
+is set to such a string, it takes precedence.
+
 .SH "SEE ALSO"
 tcp-env(1),
 tcp-environ(5),

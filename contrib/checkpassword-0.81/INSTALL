@@ -1,0 +1,40 @@
+Like any other piece of software (and information generally),
+checkpassword comes with NO WARRANTY.
+
+
+Things you have to decide before starting:
+
+* The checkpassword home directory, normally /. To change this
+directory, edit conf-home now.
+
+
+How to install:
+
+ 1. Compile the programs and create the formatted man pages:
+       % make
+
+ 2. Install the programs and man pages:
+       # make setup check
+
+
+How to test (if you have qmail installed):
+
+ 3. Simulate a failed POP login:
+       # /var/qmail/bin/qmail-popup host /bin/checkpassword pwd
+       +OK <...@host>
+       user Frodo
+       +OK
+       pass Friend
+       -ERR authorization failed
+
+ 4. Simulate a successful POP login, using a correct account name and
+    password instead of Frodo and Friend. You should see the account's
+    home directory.
+
+ 5. Simulate a successful POP login again, with id instead of pwd. You
+    should see the account's uid and gid.
+
+
+That's it! To report success:
+       % ( echo 'First M. Last'; cat `cat SYSDEPS` ) | mail djb-qst@cr.yp.to
+Replace First M. Last with your name.

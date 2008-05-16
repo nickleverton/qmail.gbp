@@ -1,1 +1,1 @@
-QMAIL/bin/maildir2mbox && exec elm ${1+"$@"}
+/usr/bin/maildir2mbox && exec elm ${1+"$@"}
