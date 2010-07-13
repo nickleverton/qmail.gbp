@@ -1,6 +1,5 @@
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include "readwrite.h"
 #include "sig.h"
 #include "exit.h"
@@ -156,7 +155,6 @@ void main()
 {
  unsigned int len;
  char ch;
- int fd;
 
  sig_blocknone();
  umask(033);
@@ -185,7 +183,7 @@ void main()
  todofn = fnnum("todo/",0);
  intdfn = fnnum("intd/",0);
 
- if (link(pidfn,messfn) == -1) die(64); 
+ if (link(pidfn,messfn) == -1) die(64);
  if (unlink(pidfn) == -1) die(63);
  flagmademess = 1;
 
@@ -250,8 +248,6 @@ void main()
  if (fsync(intdfd) == -1) die_write();
 
  if (link(intdfn,todofn) == -1) die(66);
- if ((fd = open(todofn, O_RDONLY)) < 0 ||
-     fsync(fd) < 0 || close(fd) < 0) die(66); 
 
  triggerpull();
  die(0);

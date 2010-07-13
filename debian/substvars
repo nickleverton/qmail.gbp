@@ -1,1 +1,1 @@
-shlibs:Depends=libc6 (>= 2.3.6-6), libssl0.9.8 (>= 0.9.8c-1)
+shlibs:Depends=libc6 (>= 2.3.4-1)

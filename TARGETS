@@ -168,8 +168,6 @@ control.o
 constmap.o
 timeoutread.o
 timeoutwrite.o
-tls.o
-ssl_timeoutio.o
 timeoutconn.o
 tcpto.o
 dns.o
@@ -279,8 +277,6 @@ hostname.o
 hostname
 ipmeprint.o
 ipmeprint
-ipmetest.o
-ipmetest
 qreceipt.o
 qreceipt
 qsmhook.o
@@ -325,7 +321,6 @@ binm2
 binm2+df
 binm3
 binm3+df
-Makefile-cert
 it
 qmail-local.0
 qmail-lspawn.0
@@ -391,4 +386,3 @@ forgeries.0
 man
 setup
 check
-update_tmprsadh

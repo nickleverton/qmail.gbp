@@ -3,14 +3,14 @@
 set -e 
 
 function startofpath() {
-    if [ -f usr/man/man8/`basename $1`.8 ]; then
+    if [ -f usr/share/man/man8/`basename $1`.8 ]; then
 	echo usr/sbin
-    elif [ -f usr/man/man1/`basename $1`.1 ]; then
+    elif [ -f usr/share/man/man1/`basename $1`.1 ]; then
 	echo usr/bin
     else
 	case `basename $1` in
 	    elq|pinq|qail|qlist2) echo usr/bin;;
-	    datemail|predate|qmail-home|qsmhook|sendmail|update_tmprsadh) echo usr/sbin;;
+	    datemail|predate|qmail-home|qsmhook|sendmail) echo usr/sbin;;
 	    *) echo 1>&2 Cannot determine if $1 belongs in sbin or bin;exit 2;;
 	esac
     fi

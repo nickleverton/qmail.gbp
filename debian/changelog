@@ -1,15 +1,35 @@
-qmail (1.03-45~0njl.1) etch-backports; urgency=low
+qmail (1.03-48~0njl.0) unstable; urgency=low
 
-  * Backport to Etch
-  * Add net-qmail-tls patch from
-    http://inoa.net/qmail-tls/netqmail-1.05-tls-20070408.patch
-  * Add qmail-1.03-fastremote-3.patch
-  * Add sendmail-flagf.patch
-  * Remove qmail-0.0.0.0.patch
-  * Add qmail-1.03-moreipme-0.5.patch
-  * NB, qmail-ldap already includes oversized-dns.patch and ext-todo patch.
+  * Non-maintainer upload.
+  * Backport to Lenny
+  * Apply 64-bit spawn patch to cure hangs/crashes in qmail-lspawn.
 
- -- Nick Leverton <nick@leverton.org>  Fri, 16 May 2008 23:17:54 +0100
+ -- Nick Leverton <nick@leverton.org>  Tue, 13 Jul 2010 22:16:42 +0100
+
+qmail (1.03-48) unstable; urgency=low
+
+  * Removed ability to override existing installation (Closes: #505908)
+  * Setup po-debconf for translation
+  * Various lintian suggested tweaks
+
+ -- Jon Marler <jmarler@debian.org>  Fri, 12 Mar 2010 18:54:30 -0500
+
+qmail (1.03-47) unstable; urgency=low
+
+  * Removed additional chown commands from rules script (Closes: #485956)
+
+ -- Jon Marler <jmarler@debian.org>  Sat, 13 Sep 2008 13:58:36 -0400
+
+qmail (1.03-46) unstable; urgency=low
+
+  * Removed buggy inetd.conf code from preinst (Closes #491916)
+  * Removed prompts from prerm (Closes #491919)
+  * Removed typos from control file (Closes #459616)
+  * Added libc6-dev dependancy (Closes #478513)
+  * Removed link-sync patch (Closes #466447)
+  * Removed un-needed chown command from rules script (Closes #485956)
+
+ -- Jon Marler <jmarler@debian.org>  Sun, 17 Aug 2008 15:26:55 -0400
 
 qmail (1.03-45) unstable; urgency=low
 
