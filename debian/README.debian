@@ -178,7 +178,7 @@ To build qmail binary package, you have to run
 
 WARNING! WARNING! WARNING!
  The binary packages built by build-qmail are
- dependant on the uid and gid's of the system
+ dependent on the uid and gid's of the system
  that the package was built on.
  
  If you are building/installing qmail for the

@@ -1,22 +1,19 @@
-qmail (1.03-49.2) unstable; urgency=low
+qmail (1.03-49) unstable; urgency=high
 
-  * Non-maintainer upload
-  * Fix pending l10n issues. Debconf translations:
-    - French (Thomas Blein).  Closes: #596430
-    - Italian (Vincenzo Campanella).  Closes: #596497
-    - German (Martin Eberhard Schauer).  Closes: #596504
-    - Traditional Chinese (Kan-Ru Chen).  Closes: #596505
-    - Danish (Joe Hansen).  Closes: #596608
-    - Portuguese (Pedro Ribeiro).  Closes: #596614
-    - Swedish (Martin Bagge / brother).  Closes: #596697
-    - Czech (Michal Simunek).  Closes: #596800
-    - Spanish (Omar Campagne).  Closes: #597184
-
- -- Christian Perrier <bubulle@debian.org>  Wed, 06 Oct 2010 22:24:00 +0200
-
-qmail (1.03-49) unstable; urgency=low
-
-  * Fixed debian/rules regression (Closes: #584745)
+  * Fixed FTBFS regression (Closes: #584745)
+  * Debconf templates and debian/control reviewed by the debian-l10n-
+    english team as part of the Smith review project. Closes: #576640
+  * [Debconf translation updates]
+  * Vietnamese (Clytie Siddall).  Closes: #577165
+  * Russian (Yuri Kozlov).  Closes: #577173
+  * Italian (Vincenzo Campanella).  Closes: #577544
+  * Swedish (Martin Bagge).  Closes: #577556
+  * Portuguese (Pedro Ribeiro).  Closes: #577579
+  * Czech (Michal Simunek).  Closes: #578525
+  * French (Thomas Blein).  Closes: #578555
+  * Spanish (Omar Campagne).  Closes: #578728
+  * German (Martin Eberhard Schauer).  Closes: #579015
+  * Special thanks to Christian Perrier <bubulle@debian.org> and the translation team
 
  -- Jon Marler <jmarler@debian.org>  Wed, 09 Sep 2010 10:31:07 -0400
 

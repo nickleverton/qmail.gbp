@@ -1,0 +1,228 @@
+# Vietnamese Debconf translation for Qmail.
+# Copyright © 2010 Free Software Foundation, Inc.
+# Clytie Siddall <clytie@riverland.net.au>, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: qmail 1.03-49\n"
+"Report-Msgid-Bugs-To: qmail@packages.debian.org\n"
+"POT-Creation-Date: 2010-06-10 00:47-0400\n"
+"PO-Revision-Date: 2010-04-10 17:57+0930\n"
+"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
+"Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: LocFactoryEditor 1.8\n"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid "Notice for Qmail users"
+msgstr "Thông báo cho người dùng qmail"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid ""
+"Before making any changes to Qmail configuration, please read /usr/share/doc/"
+"qmail/README.Debian.gz. This file includes a description of the differences "
+"between Qmail in Debian, Qmail in other systems, and other mail transfer "
+"agents."
+msgstr ""
+"Trước khi làm thay đổi nào trong cấu hình Qmail, hãy đọc tài liệu Đọc Đi « /"
+"usr/share/doc/qmail/README.Debian.gz ». Tập tin này gồm có mô tả về sự khác "
+"nhau giữa Qmail trên Debian, Qmail trên hệ thống khác, và các tác nhân "
+"truyền thư tín khác."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid ""
+"If you were using a more conventional MTA previously, you will also want to "
+"read the \"qmail-upgrade\" manpage, which details user-visible differences "
+"between Sendmail and Qmail."
+msgstr ""
+"Nếu bạn đã sử dụng một MTA (tác nhân truyền thư tín) quy ước hơn về trước "
+"thì cũng nên đọc trang hướng dẫn « qmail-upgrade » mà diễn tả những sự khác "
+"nhau cho người dùng thấy được giữa Sendmail và Qmail."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid ""
+"If you are new to Qmail, you will want to at least peruse the Qmail FAQ, "
+"which can be found in /usr/share/doc/qmail."
+msgstr ""
+"Nếu bạn bắt đầu sử dụng Qmail thì hãy đọc ít nhất Hỏi Đáp Qmail (/usr/share/"
+"doc/qmail)."
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:3001
+msgid "Start Qmail now?"
+msgstr "Khởi chạy Qmail ngay bây giờ ?"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:4001
+msgid "Qmail will be started at the next reboot"
+msgstr "Qmail sẽ khởi chạy vào lúc khởi động lại kế tiếp"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:4001
+msgid ""
+"You chose not to start Qmail now. It will be started automatically at next "
+"reboot."
+msgstr ""
+"Bạn đã chọn không khởi chạy Qmail ngay bây giờ. Vì vậy nó được tự động khởi "
+"chạy vào lúc khởi động lại kế tiếp."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:4001
+msgid ""
+"You can also start it manually with \"/etc/init.d/qmail start\" (as root) at "
+"a shell prompt."
+msgstr ""
+"Bạn cũng có khả năng tự khởi chạy nó dùng câu lệnh « /etc/init.d/qmail start "
+"» (dưới người chủ) tại dấu nhắc trình bao."
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:5001
+msgid "Remove Qmail users during a purge?"
+msgstr "Tẩy gói thì cũng gỡ bỏ các người dùng Qmail ?"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:5001
+msgid ""
+"Please choose whether you want users created by the qmail package to be "
+"removed when this package is purged."
+msgstr ""
+"Hãy chọn nếu bạn muốn mọi người dùng được gói qmail tạo đều bị gỡ bỏ khi gói "
+"này bị tẩy."
+
+#. Type: error
+#. Description
+#: ../qmail.templates:6001
+msgid "Changes for virtual users"
+msgstr "Thay đổi cho người dùng ảo"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:6001
+msgid ""
+"recipientmap is gone from Qmail 1.03. The virtualdomains mechanism has been "
+"expanded to support virtual users. This machine's setup needs to be fixed."
+msgstr ""
+"recipientmap không còn nằm lại trong Qmail 1.03. Cơ chế virtualdomains (miền "
+"ảo) đã được mở rộng để hỗ trợ người dùng ảo. Do đó thiết lập của máy này cần "
+"phải được sửa chữa."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid "qlist utility discontinued"
+msgstr "Tiện ích qlist bị thôi"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid ""
+"The qlist utility was split out into a separate tarball by the upstream "
+"developer in Qmail 1.02."
+msgstr ""
+"Tiện ích qlist đã được tách ra theo một kho nén riêng bởi dự án gốc trong "
+"Qmail 1.02."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid ""
+"This utility has not been packaged as it can be replaced by ezmlm. It can "
+"however be downloaded from http://pobox.com/~djb/qlist.html."
+msgstr ""
+"Tiện ích này không có sẵn trong gói vì ezmlm thay thế được. Cũng có thể tải "
+"nó xuống địa chỉ « http://pobox.com/~djb/qlist.html »."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid ""
+"Please check in /usr/share/doc/qmail and the man pages for changes since "
+"Qmail 1.01."
+msgstr ""
+"Hãy kiểm tra thay đổi nào trong « /usr/share/doc/qmail » và các trang hướng "
+"dẫn kể từ Qmail 1.01."
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid "Internet superserver configuration file (inetd.conf) changes"
+msgstr "Thay đổi tập tin cấu hình siêu máy chủ Internet (inetd.conf)"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid ""
+"The inetd superserver is not very efficient at handling Qmail, so the "
+"default installation uses tcpserver from ucspi-tcp instead."
+msgstr ""
+"Siêu máy chủ inetd không hiệu dụng lắm khi quản lý Qmail thì bản cài đặt mặc "
+"định thay thế nó bằng tcpserver từ gói « ucspi-tcp »."
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid "For this reason, the smtp line in /etc/inetd.conf has been disabled."
+msgstr ""
+"Vì lý do này, dòng smtp trong tập tin cấu hình « /etc/inetd.conf » đã bị tắt."
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid ""
+"This means that you must configure things such as RELAYCLIENT using /etc/tcp."
+"smtp, rather than /etc/hosts.allow (see /usr/share/doc/qmail/README for "
+"details)."
+msgstr ""
+"Có nghĩa là bạn cần phải cấu hình mỗi điều như RELAYCLIENT (ứng dụng khách "
+"tiếp lại) dùng « /etc/tcp.smtp » hơn là « /etc/hosts.allow » (xem tài liệu "
+"Đọc Đi « /usr/share/doc/qmail/README »)."
+
+#. Type: note
+#. Description
+#: ../qmail.templates:9001
+msgid "Updating /etc/tcp.smtp database for tcpserver"
+msgstr "Đang cập nhật cơ sở dữ liệu « /etc/tcp.smtp » cho tcpserver"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:10001
+msgid "Override pre-existing Qmail installation?"
+msgstr "Ghi đè lên bản cài đặt Qmail đã có ?"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:10001
+msgid ""
+"An existing installation of Qmail has been detected. Please choose whether "
+"you want this installation to be overridden."
+msgstr ""
+"Phát hiện được một bản cài đặt Qmail đã có. Hãy chọn nếu bạn muốn ghi đè lên "
+"bản cài đặt trước này, hay không."
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:10001
+msgid ""
+"Do not choose this option if you need to preserve the current setup for "
+"Qmail."
+msgstr ""
+"Không nên bật tuỳ chọn này nếu bạn cần phải bảo tồn thiết lập hiện thời cho "
+"Qmail."

@@ -1,0 +1,211 @@
+# Qmail po-debconf
+# This file is distributed under the same license as the PACKAGE package.
+# Kan-Ru Chen <koster@debian.org>, 2010
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Qmail\n"
+"Report-Msgid-Bugs-To: qmail@packages.debian.org\n"
+"POT-Creation-Date: 2010-06-10 00:47-0400\n"
+"PO-Revision-Date: 2010-09-12 16:00+0800\n"
+"Last-Translator: Kan-Ru Chen <koster@debian.org>\n"
+"Language-Team: Chinese Traditional <debian-chinese-big5@lists.debian.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid "Notice for Qmail users"
+msgstr "給 Qmail 用戶的提示"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid ""
+"Before making any changes to Qmail configuration, please read /usr/share/doc/"
+"qmail/README.Debian.gz. This file includes a description of the differences "
+"between Qmail in Debian, Qmail in other systems, and other mail transfer "
+"agents."
+msgstr ""
+"在動手修改任何 Qmail 設定前，請您先閱讀 /usr/share/doc/qmail/README.Debian."
+"gz。這個檔案說明了 Qmail 在 Debian 系統中，與其他系統以及其他郵件傳送代理程式"
+"的不同。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid ""
+"If you were using a more conventional MTA previously, you will also want to "
+"read the \"qmail-upgrade\" manpage, which details user-visible differences "
+"between Sendmail and Qmail."
+msgstr ""
+"如果您使用過傳統的 MTA，請繼續閱讀 \"qmail-upgrade\" manpage，該文件仔細列出 "
+"Sendmail 與 Qmail 間明顯不同之處。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:2001
+msgid ""
+"If you are new to Qmail, you will want to at least peruse the Qmail FAQ, "
+"which can be found in /usr/share/doc/qmail."
+msgstr ""
+"如果您是初次使用 Qmail，請繼續閱讀 Qmail FAQ，該文件位於 /usr/share/doc/"
+"qmail。 "
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:3001
+msgid "Start Qmail now?"
+msgstr "現在就啟動 Qmail？"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:4001
+msgid "Qmail will be started at the next reboot"
+msgstr "Qmail 會在下次重新開機後執行"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:4001
+msgid ""
+"You chose not to start Qmail now. It will be started automatically at next "
+"reboot."
+msgstr "您可以選擇不要現在啟動 Qmail。它會在下次重新啟動的時候自動執行。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:4001
+msgid ""
+"You can also start it manually with \"/etc/init.d/qmail start\" (as root) at "
+"a shell prompt."
+msgstr ""
+"或者您也可以在 shell 中手動以 \"/etc/init.d/qmail start\" 啟動 Qmail。(需 "
+"root 權限)"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:5001
+msgid "Remove Qmail users during a purge?"
+msgstr "反安裝時移除 Qmail 帳號？"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:5001
+msgid ""
+"Please choose whether you want users created by the qmail package to be "
+"removed when this package is purged."
+msgstr "請選擇您是否要在反安裝時自動移除 Qmail 建立的帳號。"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:6001
+msgid "Changes for virtual users"
+msgstr "虛擬用戶相關改變"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:6001
+msgid ""
+"recipientmap is gone from Qmail 1.03. The virtualdomains mechanism has been "
+"expanded to support virtual users. This machine's setup needs to be fixed."
+msgstr ""
+"recipientmap 自從 Qmail 1.03 後已經移除。由原本的 virtualdomains 機制延伸支持"
+"虛擬用戶。此伺服器的設定需要對應的修改。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid "qlist utility discontinued"
+msgstr "qlist 工具程式已不存在"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid ""
+"The qlist utility was split out into a separate tarball by the upstream "
+"developer in Qmail 1.02."
+msgstr "qlist 工具程式自從 Qmail 1.02 開始已經不隨 Qmail 發佈。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid ""
+"This utility has not been packaged as it can be replaced by ezmlm. It can "
+"however be downloaded from http://pobox.com/~djb/qlist.html."
+msgstr ""
+"這支程式由於已經被 ezmlm 取代，目前沒有被打包。您還是可以從 http://pobox.com/"
+"~djb/qlist.html 自行下載。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:7001
+msgid ""
+"Please check in /usr/share/doc/qmail and the man pages for changes since "
+"Qmail 1.01."
+msgstr ""
+"請檢查 /usr/share/doc/qmail 中的文件以及 man pages 以了解自 Qmail 1.01 以來的"
+"改變。"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid "Internet superserver configuration file (inetd.conf) changes"
+msgstr "網際網路伺服器設定檔 (inetd.conf) 改變"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid ""
+"The inetd superserver is not very efficient at handling Qmail, so the "
+"default installation uses tcpserver from ucspi-tcp instead."
+msgstr ""
+"用 inetd 伺服器處理 Qmail 很沒有效率，所以預設的安裝改用來自 ucspi-tcp 的 "
+"tcpserver。"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid "For this reason, the smtp line in /etc/inetd.conf has been disabled."
+msgstr "因此，已將 /etc/inetd.conf 中的 smtp 設定取消。"
+
+#. Type: error
+#. Description
+#: ../qmail.templates:8001
+msgid ""
+"This means that you must configure things such as RELAYCLIENT using /etc/tcp."
+"smtp, rather than /etc/hosts.allow (see /usr/share/doc/qmail/README for "
+"details)."
+msgstr ""
+"這表示您必須使用 /etc/tcp.smtp 設定如 RELAYCLIENT 的資訊，而不是寫在 /etc/"
+"hosts.allow (參看 /usr/share/doc/qmail/README)。"
+
+#. Type: note
+#. Description
+#: ../qmail.templates:9001
+msgid "Updating /etc/tcp.smtp database for tcpserver"
+msgstr "更新 /etc/tcp.smtp 資料庫"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:10001
+msgid "Override pre-existing Qmail installation?"
+msgstr "覆蓋先前的 Qmail 安裝資訊？"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:10001
+msgid ""
+"An existing installation of Qmail has been detected. Please choose whether "
+"you want this installation to be overridden."
+msgstr "偵測到先前的 Qmail 安裝設定。請選擇是否要覆蓋此設定。"
+
+#. Type: boolean
+#. Description
+#: ../qmail.templates:10001
+msgid ""
+"Do not choose this option if you need to preserve the current setup for "
+"Qmail."
+msgstr "如果要保留目前的設定請不要選擇此選項。"

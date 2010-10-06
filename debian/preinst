@@ -126,15 +126,6 @@ sub is_qmail_installed {
 	$qmail_installed = 1;
     }
     
-    if ( (-r '/etc/inetd.conf') and `fgrep -q qmail-smtpd /etc/inetd.conf` ) {
-	debug("\n Found reference to qmail-smtpd in /etc/inetd.conf");
-	$qmail_installed = 1;
-    }
-    if ( (-r '/etc/xinetd.conf') and `fgrep -q qmail-smtpd /etc/xinetd.conf` ) {
-	debug("\n Found reference to qmail-smtpd in /etc/xinetd.conf");
-	$qmail_installed = 1;
-    }
-
     if ( -x '/etc/init.d/qmail' ) {
 	debug("\n Found /etc/init.d/qmail script");
 	$qmail_installed = 1;
@@ -151,23 +142,6 @@ sub is_qmail_installed {
     if ( `killall -0 qmail-send >/dev/null 2>&1` ) {
 	debug("\n Found qmail-send process running");
 	$qmail_installed = 1;
-    }
-
-    if ( $qmail_installed == 1) {
-    	debug("yes.\nPre-existing qmail installation detected.  Override? [yN] ");
-	$answer = <STDIN>;
-	chop $answer;
-
-	if ($answer =~ /[yY]/ ) {
-		debug("Overriding.  Qmail is not installed.\n");
-		$qmail_installed = 0;
-	} else {
-		debug("Not overriding.  Qmail is installed.\n");
-		$qmail_installed = 1;
-	}
-
-    } else {
-    	debug("no.");
     }
 
     debug("\n");
@@ -210,38 +184,6 @@ if ( $action eq 'install' ) {
 	}
     }
 
-    # Make sure there are no smtp entries in /etc/inetd.conf
-    # Kludge around smail buggy /etc/inetd.conf handling. (Grr.)
-    my $fixed_smail = 0;
-    my $found_commented = 0;
-    my $found_uncommented = 0;
-    my $new_inetd = "/etc/inetd.conf.qmail-preinst.$$";
-    open I, '</etc/inetd.conf' or die "Could not open /etc/inetd.conf\n";
-    open N, ">$new_inetd" or die "Could not create $new_inetd\n";
-    while (<I>) {
-	if ( m|^\# *smtp\s+.*/usr/sbin/in.smtpd.*\(will be restored by smail postinst\)\s*$| ) {
-                $fixed_smail = 1;
-		next;
-            } elsif ( m/^\# *smtp\s+/ ) {
-                $found_commented= 1;
-            } elsif ( m/^smtp\s+/ ) {
-                $found_uncommented= 1;
-            }
-	print N or die "Cannot write to $new_inetd\n";
-	}
-    close N or die "Could not close $new_inetd\n";
-    close I or die "Could not close /etc/inetd.conf\n";
-    if ( $found_commented or $found_uncommented ) {
-	debug("Your /etc/inetd.conf already containts entries for the SMTP service.\n");
-	debug("Please remove all SMTP entries from /etc/inetd.conf (even those commented out)\n");
-	debug("and reinstall the qmail package.\n\n");
-	exit 1; 
-    }
-    if ( $fixed_smail ) {
-	debug("Removing commented smtp entry left by buggy version of smail postinst... ");
-	rename "$new_inetd", '/etc/inetd.conf' or die "failed!\n";
-	debug("done.\n");
-    }
 } elsif ($action eq 'upgrade') {
     $old_version = shift;
      if ($old_version =~ /1.03/ ) {

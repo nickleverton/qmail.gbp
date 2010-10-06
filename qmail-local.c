@@ -1,6 +1,5 @@
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include "readwrite.h"
 #include "sig.h"
 #include "env.h"
@@ -129,9 +128,6 @@ char *dir;
  if (close(fd) == -1) goto fail; /* NFS dorks */
 
  if (link(fntmptph,fnnewtph) == -1) goto fail;
- if ((fd = open(fnnewtph, O_RDONLY)) < 0 ||
-     fsync(fd) < 0 || close(fd) < 0) goto fail;
-   
    /* if it was error_exist, almost certainly successful; i hate NFS */
  tryunlinktmp(); _exit(0);
 
