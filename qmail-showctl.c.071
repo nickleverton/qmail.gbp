@@ -215,7 +215,6 @@ void main()
   }
 
   do_lst("badhelo","Any HELO host name is allowed.",""," HELO host name denied if it matches this pattern.");
-  do_lst("authsenders","No authenticated SMTP sender.","Authenicated SMTP sender: ","");
   do_lst("badmailfrom","Any MAIL FROM is allowed.",""," MAIL FROM denied if it matches this pattern.");
   do_lst("badmailfromnorelay","Any MAIL FROM is allowed.",""," MAIL FROM denied if it matches this pattern and RELAYCLIENT is not set.");
   do_lst("badmailto","No RCPT TO are specifically denied.",""," RCPT TO denied if it matches this pattern.");
@@ -270,7 +269,8 @@ void main()
   while (d = readdir(dir)) {
     if (str_equal(d->d_name,".")) continue;
     if (str_equal(d->d_name,"..")) continue;
-    if (str_equal(d->d_name,"authsenders")) continue;
+    if (str_equal(d->d_name,"bouncefrom")) continue;
+    if (str_equal(d->d_name,"bouncehost")) continue;
     if (str_equal(d->d_name,"badhelo")) continue;
     if (str_equal(d->d_name,"badmailfrom")) continue;
     if (str_equal(d->d_name,"badmailfromnorelay")) continue;

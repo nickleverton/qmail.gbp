@@ -78,26 +78,26 @@ binary-arch: checkroot buildbinary
 # Move /var/qmail/bin programs to either /usr/bin or /usr/sbin
 	bash debian/debianize-binary-tree
 # Install checkpassword in /usr/bin
-	$(INSTALL) -o root -g root -m 755 contrib/checkpassword-0.90/checkpassword debian/tmp/usr/bin
+	$(INSTALL) -m 755 contrib/checkpassword-0.90/checkpassword debian/tmp/usr/bin
 # Install checkpassword manpage
-	$(INSTALL) -o root -g root -m 644 contrib/checkpassword-0.90/checkpassword.8 debian/tmp/usr/share/man/man8
+	$(INSTALL) -m 644 contrib/checkpassword-0.90/checkpassword.8 debian/tmp/usr/share/man/man8
 # Install mbox2maildir in /usr/bin
-	$(INSTALL) -o root -g root -m 755 contrib/mbox2maildir/mbox2maildir debian/tmp/usr/bin
+	$(INSTALL) -m 755 contrib/mbox2maildir/mbox2maildir debian/tmp/usr/bin
 # Create /usr/lib/sendmail symlink for backward compatibility.
 	ln -s ../sbin/sendmail debian/tmp/usr/lib/sendmail
 # Copy qmailconfig and its helper programs...
-	$(INSTALL) -o root -g root -m 755 dnsfq debian/tmp/usr/lib/qmail/qmailconfig-dnsfq
-	$(INSTALL) -o root -g root -m 755 dnsip debian/tmp/usr/lib/qmail/qmailconfig-dnsip
-	$(INSTALL) -o root -g root -m 755 ipmeprint debian/tmp/usr/lib/qmail/qmailconfig-ipmeprint
-	$(INSTALL) -o root -g root -m 755 dnsptr debian/tmp/usr/lib/qmail/qmailconfig-dnsptr
+	$(INSTALL) -m 755 dnsfq debian/tmp/usr/lib/qmail/qmailconfig-dnsfq
+	$(INSTALL) -m 755 dnsip debian/tmp/usr/lib/qmail/qmailconfig-dnsip
+	$(INSTALL) -m 755 ipmeprint debian/tmp/usr/lib/qmail/qmailconfig-ipmeprint
+	$(INSTALL) -m 755 dnsptr debian/tmp/usr/lib/qmail/qmailconfig-dnsptr
 # install qmail-procmail script
-	$(INSTALL) -o root -g root -m 755 debian/qmail-procmail debian/tmp/usr/sbin/qmail-procmail
+	$(INSTALL) -m 755 debian/qmail-procmail debian/tmp/usr/sbin/qmail-procmail
 # install newaliases script
-	$(INSTALL) -o root -g root -m 755 debian/newaliases debian/tmp/usr/bin/newaliases
+	$(INSTALL) -m 755 debian/newaliases debian/tmp/usr/bin/newaliases
 # install eliminate-dups script
-	$(INSTALL) -o root -g root -m 755 debian/eliminate-dups debian/tmp/usr/lib/qmail/eliminate-dups
+	$(INSTALL) -m 755 debian/eliminate-dups debian/tmp/usr/lib/qmail/eliminate-dups
 # install default users/assign
-	$(INSTALL) -o root -g root -m 644 debian/assign debian/tmp/etc/qmail/users
+	$(INSTALL) -m 644 debian/assign debian/tmp/etc/qmail/users
 # (This one is a bit of a kludge...)
 	sed -e 's|./hostname|hostname|g' \
 	    -e 's|\./dnsptr|/usr/lib/qmail/qmailconfig-dnsptr|g' \
@@ -107,24 +107,24 @@ binary-arch: checkroot buildbinary
 		config >debian/tmp/usr/lib/qmail/qmailconfig
 	chmod 755 debian/tmp/usr/lib/qmail/qmailconfig
 # Install /etc/init.d/qmail
-	$(INSTALL) -o root -g root -m 755 debian/init.d debian/tmp/etc/init.d/qmail
+	$(INSTALL) -m 755 debian/init.d debian/tmp/etc/init.d/qmail
 # install tcpserver conf file
-	$(INSTALL) -o root -g root -m 644 debian/tcp.smtp debian/tmp/etc
+	$(INSTALL) -m 644 debian/tcp.smtp debian/tmp/etc
 
 # Copy /usr/share/doc/qmail files.
-	$(INSTALL) -o root -g root -m 644 debian/changelog debian/tmp/usr/share/doc/qmail/changelog.Debian
-	$(INSTALL) -o root -g root -m 644 -p BLURB* FAQ INTERNALS README* PIC.* \
+	$(INSTALL) -m 644 debian/changelog debian/tmp/usr/share/doc/qmail/changelog.Debian
+	$(INSTALL) -m 644 -p BLURB* FAQ INTERNALS README* PIC.* \
 		SECURITY SENDMAIL SYSDEPS THANKS THOUGHTS TODO UPGRADE \
 		BIN* REMOVE* TEST* VERSION CHANGES \
 		debian/tmp/usr/share/doc/qmail/
-	$(INSTALL) -o root -g root -m 644 -p debian/README.debian debian/tmp/usr/share/doc/qmail/README.Debian
-	$(INSTALL) -o root -g root -m 644 -p debian/TODO debian/tmp/usr/share/doc/qmail/TODO.Debian
+	$(INSTALL) -m 644 -p debian/README.debian debian/tmp/usr/share/doc/qmail/README.Debian
+	$(INSTALL) -m 644 -p debian/TODO debian/tmp/usr/share/doc/qmail/TODO.Debian
 	
-	$(INSTALL) -o root -g root -m 644 -p debian/ip-up.d debian/tmp/usr/share/doc/qmail/examples/ip-up.d
-	$(INSTALL) -o root -g root -m 644 -p debian/logcheck debian/tmp/usr/share/doc/qmail/examples/logcheck.ignore
+	$(INSTALL) -m 644 -p debian/ip-up.d debian/tmp/usr/share/doc/qmail/examples/ip-up.d
+	$(INSTALL) -m 644 -p debian/logcheck debian/tmp/usr/share/doc/qmail/examples/logcheck.ignore
 	
-	$(INSTALL) -p -o root -g root -m644 debian/changelog debian/tmp/usr/share/doc/qmail/changelog.Debian
-	$(INSTALL) -p -o root -g root -m644 CHANGES debian/tmp/usr/share/doc/qmail/changelog
+	$(INSTALL) -p -m644 debian/changelog debian/tmp/usr/share/doc/qmail/changelog.Debian
+	$(INSTALL) -p -m644 CHANGES debian/tmp/usr/share/doc/qmail/changelog
 	-strip --remove-section=comment --remove-section=note \
 		debian/tmp/usr/bin/* debian/tmp/usr/sbin/* \
 		debian/tmp/usr/lib/*                        2>/dev/null
@@ -136,7 +136,7 @@ binary-arch: checkroot buildbinary
 	#chown -R root.root debian/tmp/usr/share/man
 	$(INSTALL) -p -m755 debian/postinst debian/preinst \
 			debian/prerm debian/postrm        debian/tmp/DEBIAN
-	$(INSTALL) -o root -g root -m 644 -p debian/conffiles debian/tmp/DEBIAN/conffiles
+	$(INSTALL) -m 644 -p debian/conffiles debian/tmp/DEBIAN/conffiles
 
 	# Install debconf stuff
 	$(INSTALL) -m 755 debian/qmail.config debian/tmp/DEBIAN/config
@@ -144,7 +144,7 @@ binary-arch: checkroot buildbinary
 	chmod 644 debian/tmp/DEBIAN/templates
 
 	## Install logcheck files
-	#$(INSTALL) -o root -g root -d debian/tmp/etc/logcheck/ignore.d.server
+	#$(INSTALL) -d debian/tmp/etc/logcheck/ignore.d.server
 	#$(INSTALL) -m 600 debian/logcheck debian/tmp/etc/logcheck/ignore.d.server/qmail
 
 	(cd debian/tmp/var/qmail && ln -s /usr/sbin bin)
@@ -179,14 +179,14 @@ binary-src: checkdir debian/control \
 		
 # Install build-qmail manpage
 	mkdir -p $(TMPSRC)/usr/share/man/man1
-	$(INSTALL) -o root -g root -m 644 debian/build-qmail.1 $(TMPSRC)/usr/share/man/man1
+	$(INSTALL) -m 644 debian/build-qmail.1 $(TMPSRC)/usr/share/man/man1
 	-gzip -fr9 $(TMPSRC)/usr/share/man/
 
 	sed -e "s/#PACKAGE#/$(PACKAGE)/" debian/README-src > $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/README.Debian
-	$(INSTALL) -o root -g root -m 0644 debian/changelog $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/changelog.Debian
+	$(INSTALL) -m 0644 debian/changelog $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/changelog.Debian
 	chmod 644 $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/changelog.Debian
 	gzip -9fr $(TMPSRC)/usr/share/doc/
-	$(INSTALL) -o root -g root -m 0644 debian/copyright $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/
+	$(INSTALL) -m 0644 debian/copyright $(TMPSRC)/usr/share/doc/$(PACKAGE)-src/
 	# Install debconf files
 	#cp debian/qmail-src.config $(TMPSRC)/DEBIAN/config
 	#cp debian/qmail-src.templates $(TMPSRC)/DEBIAN/templates

@@ -1,26 +1,29 @@
-# SOME DESCRIPTIVE TITLE.
+# translation of ru.po to Russian
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
+# Yuri Kozlov <yuray@komyakino.ru>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: qmail 1.03-49\n"
 "Report-Msgid-Bugs-To: qmail@packages.debian.org\n"
 "POT-Creation-Date: 2010-06-10 00:47-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2010-04-10 13:35+0400\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
+"Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #. Type: note
 #. Description
 #: ../qmail.templates:2001
 msgid "Notice for Qmail users"
-msgstr ""
+msgstr "Замечание для пользователей qmail"
 
 #. Type: note
 #. Description
@@ -31,6 +34,9 @@ msgid ""
 "between Qmail in Debian, Qmail in other systems, and other mail transfer "
 "agents."
 msgstr ""
+"Перед тем как изменять настройки Qmail, прочтите /usr/share/doc/qmail/README."
+"Debian.gz. В этом файле описаны отличия Qmail из Debian и других систем и от "
+"других агентов пересылки почты."
 
 #. Type: note
 #. Description
@@ -40,6 +46,9 @@ msgid ""
 "read the \"qmail-upgrade\" manpage, which details user-visible differences "
 "between Sendmail and Qmail."
 msgstr ""
+"Если ранее вы использовали более традиционные MTA, то прочтите также "
+"справочную страницу \"qmail-upgrade\", в которой приведены различия между "
+"Sendmail и Qmail."
 
 #. Type: note
 #. Description
@@ -48,18 +57,20 @@ msgid ""
 "If you are new to Qmail, you will want to at least peruse the Qmail FAQ, "
 "which can be found in /usr/share/doc/qmail."
 msgstr ""
+"Если вы ранее не использовали Qmail, то внимательно прочтите Qmail FAQ, "
+"который можно найти в каталоге /usr/share/doc/qmail."
 
 #. Type: boolean
 #. Description
 #: ../qmail.templates:3001
 msgid "Start Qmail now?"
-msgstr ""
+msgstr "Запустить Qmail прямо сейчас?"
 
 #. Type: note
 #. Description
 #: ../qmail.templates:4001
 msgid "Qmail will be started at the next reboot"
-msgstr ""
+msgstr "Qmail будет запущен при следующем перезапуске системы"
 
 #. Type: note
 #. Description
@@ -68,6 +79,8 @@ msgid ""
 "You chose not to start Qmail now. It will be started automatically at next "
 "reboot."
 msgstr ""
+"Вы отказались от немедленно запуска Qmail. Он будет запущен автоматически "
+"при следующем перезапуске системы."
 
 #. Type: note
 #. Description
@@ -76,12 +89,14 @@ msgid ""
 "You can also start it manually with \"/etc/init.d/qmail start\" (as root) at "
 "a shell prompt."
 msgstr ""
+"Также вы можете запустить его вручную из командной строки выполнив \"/etc/"
+"init.d/qmail start\" (от root)."
 
 #. Type: boolean
 #. Description
 #: ../qmail.templates:5001
 msgid "Remove Qmail users during a purge?"
-msgstr ""
+msgstr "Удалять пользователей Qmail при вычистке?"
 
 #. Type: boolean
 #. Description
@@ -90,12 +105,14 @@ msgid ""
 "Please choose whether you want users created by the qmail package to be "
 "removed when this package is purged."
 msgstr ""
+"Выберите, хотите ли вы удалять пользователей, созданных пакетом qmail при "
+"вычистке пакета."
 
 #. Type: error
 #. Description
 #: ../qmail.templates:6001
 msgid "Changes for virtual users"
-msgstr ""
+msgstr "Изменения для виртуальных пользователей"
 
 #. Type: error
 #. Description
@@ -104,12 +121,15 @@ msgid ""
 "recipientmap is gone from Qmail 1.03. The virtualdomains mechanism has been "
 "expanded to support virtual users. This machine's setup needs to be fixed."
 msgstr ""
+"Начиная с Qmail 1.03, recipientmap больше нет. Для поддержки виртуальных "
+"пользователей был расширен механизм virtualdomains. Настройки на данной "
+"машине должны быть изменены."
 
 #. Type: note
 #. Description
 #: ../qmail.templates:7001
 msgid "qlist utility discontinued"
-msgstr ""
+msgstr "Утилиты qlist больше нет"
 
 #. Type: note
 #. Description
@@ -118,6 +138,8 @@ msgid ""
 "The qlist utility was split out into a separate tarball by the upstream "
 "developer in Qmail 1.02."
 msgstr ""
+"Утилита qlist была вынесена в отдельный файл основным разработчиком в Qmail "
+"1.02."
 
 #. Type: note
 #. Description
@@ -126,6 +148,8 @@ msgid ""
 "This utility has not been packaged as it can be replaced by ezmlm. It can "
 "however be downloaded from http://pobox.com/~djb/qlist.html."
 msgstr ""
+"Для неё не был создан отдельный пакет, так как её можно заменить на ezmlm. "
+"Однако её можно скачать со страницы http://pobox.com/~djb/qlist.html."
 
 #. Type: note
 #. Description
@@ -134,12 +158,15 @@ msgid ""
 "Please check in /usr/share/doc/qmail and the man pages for changes since "
 "Qmail 1.01."
 msgstr ""
+"Посмотрите изменения в /usr/share/doc/qmail и справочной странице, начиная с "
+"версии Qmail 1.01."
 
 #. Type: error
 #. Description
 #: ../qmail.templates:8001
 msgid "Internet superserver configuration file (inetd.conf) changes"
 msgstr ""
+"Изменения, связанные с файлом настройки Internet superserver (inetd.conf)"
 
 #. Type: error
 #. Description
@@ -148,12 +175,14 @@ msgid ""
 "The inetd superserver is not very efficient at handling Qmail, so the "
 "default installation uses tcpserver from ucspi-tcp instead."
 msgstr ""
+"Суперсервер inetd не очень эффективен для работы с Qmail, поэтому в "
+"установке по умолчанию вместо него используется tcpserver из ucspi-tcp."
 
 #. Type: error
 #. Description
 #: ../qmail.templates:8001
 msgid "For this reason, the smtp line in /etc/inetd.conf has been disabled."
-msgstr ""
+msgstr "По этой причине строка smtp в /etc/inetd.conf будет закомментирована."
 
 #. Type: error
 #. Description
@@ -163,18 +192,20 @@ msgid ""
 "smtp, rather than /etc/hosts.allow (see /usr/share/doc/qmail/README for "
 "details)."
 msgstr ""
+"Это означает, что вы должны настраивать такие параметры как RELAYCLIENT "
+"через /etc/tcp.smtp, а не /etc/hosts.allow (см. /usr/share/doc/qmail/README)."
 
 #. Type: note
 #. Description
 #: ../qmail.templates:9001
 msgid "Updating /etc/tcp.smtp database for tcpserver"
-msgstr ""
+msgstr "Обновляется база данных /etc/tcp.smtp для tcpserver"
 
 #. Type: boolean
 #. Description
 #: ../qmail.templates:10001
 msgid "Override pre-existing Qmail installation?"
-msgstr ""
+msgstr "Перезаписать существующую установку Qmail?"
 
 #. Type: boolean
 #. Description
@@ -182,7 +213,7 @@ msgstr ""
 msgid ""
 "An existing installation of Qmail has been detected. Please choose whether "
 "you want this installation to be overridden."
-msgstr ""
+msgstr "Обнаружена установка Qmail. Выберите, хотите ли вы её перезаписать."
 
 #. Type: boolean
 #. Description
@@ -191,3 +222,4 @@ msgid ""
 "Do not choose this option if you need to preserve the current setup for "
 "Qmail."
 msgstr ""
+"Ответьте отрицательно, если вам нужно сохранить текущие настройки Qmail."

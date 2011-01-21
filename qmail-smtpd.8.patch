@@ -1,0 +1,44 @@
+--- qmail-smtpd.8.orig  15-06-1998
++++ qmail-smtpd.8       2010-55-08/05/10
+--- ../qmail-1.03/qmail-smtpd.8	1998-06-15 12:53:16.000000000 +0200
++++ ../qmail-1.03.071/qmail-smtpd.8	2008-03-25 14:27:39.000000000 +0100
+@@ -23,7 +23,38 @@
+ header fields.
+ 
+ .B qmail-smtpd
+-supports ESMTP, including the 8BITMIME and PIPELINING options.
++supports ESMTP, including the 8BITMIME, DATA, PIPELINING, SIZE, and AUTH options.
++.B qmail-smtpd
++includes a \'MAIL FROM:\' parameter parser and obeys \'Auth\' and \'Size\' advertisements.
++.B qmail-smtpd
++can accept LOGIN, PLAIN, and CRAM-MD5 AUTH types. It invokes
++.IR checkprogram ,
++which reads on file descriptor 3 the username, a 0 byte, the password
++or CRAM-MD5 digest/response derived from the SMTP client,
++another 0 byte, a CRAM-MD5 challenge (if applicable to the AUTH type),
++and a final 0 byte.
++.I checkprogram
++invokes
++.I subprogram
++upon successful authentication, which should in turn return 0 to
++.BR qmail-smtpd ,
++effectively setting the environment variables $RELAYCLIENT and $TCPREMOTEINFO
++(any supplied value replaced with the authenticated username).
++.B qmail-smtpd
++will reject the authentication attempt if it receives a nonzero return
++value from
++.I checkprogram
++or
++.IR subprogram .
++
++Binding
++.B qmail-smtpd
++to the SUBMISSION port (\'587\') instead of the standard SMTP port 25 will advice
++.B qmail-smtpd 
++to require SMTP authention prior of accepting the \'MAIL FROM:\' command.
++A different port can be chosen, populating the environment variable 
++.IR SUBMISSIONPORT .
++
+ .SH TRANSPARENCY
+ .B qmail-smtpd
+ converts the SMTP newline convention into the UNIX newline convention

@@ -1,26 +1,26 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# portuguese translation for qmail debconf messages
+# Copyright (C) 2010 THE qmail'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the qmail package.
+# Pedro Ribeiro <p.m42.ribeiro@gmail.com>, 2010
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: qmail 1.03-49\n"
 "Report-Msgid-Bugs-To: qmail@packages.debian.org\n"
 "POT-Creation-Date: 2010-06-10 00:47-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2010-09-12 21:17+0100\n"
+"Last-Translator: Pedro Ribeiro <p.m42.ribeiro@gmail.com>\n"
+"Language-Team: Portuguese <traduz@debianpt.org>\n"
+"Language: pt\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: note
 #. Description
 #: ../qmail.templates:2001
 msgid "Notice for Qmail users"
-msgstr ""
+msgstr "Aviso para os utilizadores do Qmail"
 
 #. Type: note
 #. Description
@@ -31,6 +31,10 @@ msgid ""
 "between Qmail in Debian, Qmail in other systems, and other mail transfer "
 "agents."
 msgstr ""
+"Antes de fazer quaisquer alterações à configuração do Qmail, leia por favor /"
+"usr/share/doc/qmail/REAME.Debian.gz. Este ficheiro inclui uma descrição das "
+"diferenças entre o Qmail em Debian, Qmail noutros sistemas e outros agentes "
+"de transferência de correio (MTA)."
 
 #. Type: note
 #. Description
@@ -40,6 +44,9 @@ msgid ""
 "read the \"qmail-upgrade\" manpage, which details user-visible differences "
 "between Sendmail and Qmail."
 msgstr ""
+"Se estava a usar um MTA mais convencional antes, vai querer também ler a "
+"página de manual \"qmail-upgrade\", que mostra em detalhe as diferenças "
+"visíveis entre o Sendmail e o Qmail."
 
 #. Type: note
 #. Description
@@ -48,18 +55,20 @@ msgid ""
 "If you are new to Qmail, you will want to at least peruse the Qmail FAQ, "
 "which can be found in /usr/share/doc/qmail."
 msgstr ""
+"Se é novo em relação ao Qmail, quererá pelo menos passar os olhos pelo FAQ "
+"do Qmail, que pode ser encontrado em /usr/share/doc/qmail."
 
 #. Type: boolean
 #. Description
 #: ../qmail.templates:3001
 msgid "Start Qmail now?"
-msgstr ""
+msgstr "Iniciar o Qmail agora?"
 
 #. Type: note
 #. Description
 #: ../qmail.templates:4001
 msgid "Qmail will be started at the next reboot"
-msgstr ""
+msgstr "O Qmail irá ser iniciado no próximo arranque"
 
 #. Type: note
 #. Description
@@ -68,6 +77,8 @@ msgid ""
 "You chose not to start Qmail now. It will be started automatically at next "
 "reboot."
 msgstr ""
+"Escolheu não iniciar o Qmail agora. Será iniciado automaticamente no próximo "
+"arranque."
 
 #. Type: note
 #. Description
@@ -76,12 +87,14 @@ msgid ""
 "You can also start it manually with \"/etc/init.d/qmail start\" (as root) at "
 "a shell prompt."
 msgstr ""
+"Pode também iniciá-lo manualmente com \"/etc/init.d/qmail start\" (como "
+"root) a partir de um prompt da consola."
 
 #. Type: boolean
 #. Description
 #: ../qmail.templates:5001
 msgid "Remove Qmail users during a purge?"
-msgstr ""
+msgstr "Remover os utilizadores do Qmail durante a purga?"
 
 #. Type: boolean
 #. Description
@@ -90,12 +103,14 @@ msgid ""
 "Please choose whether you want users created by the qmail package to be "
 "removed when this package is purged."
 msgstr ""
+"Escolha por favor se quer que os utilizadores criados pelo pacote qmail "
+"sejam removidos quando este pacote for purgado."
 
 #. Type: error
 #. Description
 #: ../qmail.templates:6001
 msgid "Changes for virtual users"
-msgstr ""
+msgstr "Alterações a utilizadores virtuais"
 
 #. Type: error
 #. Description
@@ -104,12 +119,15 @@ msgid ""
 "recipientmap is gone from Qmail 1.03. The virtualdomains mechanism has been "
 "expanded to support virtual users. This machine's setup needs to be fixed."
 msgstr ""
+"recipientmap foi removido do Qmail 1.03. O mecanismo virtualdomains foi "
+"expandido para suportar utilizadores virtuais. A configuração desta máquina "
+"precisa de ser corrigida."
 
 #. Type: note
 #. Description
 #: ../qmail.templates:7001
 msgid "qlist utility discontinued"
-msgstr ""
+msgstr "utilitário qlist descontinuado"
 
 #. Type: note
 #. Description
@@ -118,6 +136,8 @@ msgid ""
 "The qlist utility was split out into a separate tarball by the upstream "
 "developer in Qmail 1.02."
 msgstr ""
+"O utilitário qlist foi transferido para um arquivo separado pelo programador "
+"original no Qmail 1.02."
 
 #. Type: note
 #. Description
@@ -126,6 +146,8 @@ msgid ""
 "This utility has not been packaged as it can be replaced by ezmlm. It can "
 "however be downloaded from http://pobox.com/~djb/qlist.html."
 msgstr ""
+"Este utilitário não foi empacotado porque pode ser substituído pelo ezmlm. "
+"Pode, no entanto, ser obtido em http://pobox.com/~djb/qlist.html."
 
 #. Type: note
 #. Description
@@ -134,12 +156,15 @@ msgid ""
 "Please check in /usr/share/doc/qmail and the man pages for changes since "
 "Qmail 1.01."
 msgstr ""
+"Verifique por favor /usr/share/doc/qmail e as páginas do manual para "
+"alterações desde o Qmail 1.01."
 
 #. Type: error
 #. Description
 #: ../qmail.templates:8001
 msgid "Internet superserver configuration file (inetd.conf) changes"
 msgstr ""
+"Alterações ao ficheiro de configuração do superservidor internet (inetd.conf)"
 
 #. Type: error
 #. Description
@@ -148,12 +173,14 @@ msgid ""
 "The inetd superserver is not very efficient at handling Qmail, so the "
 "default installation uses tcpserver from ucspi-tcp instead."
 msgstr ""
+"O superservidor inetd não é muito eficiente no tratamento do Qmail, portanto "
+"a instalação predefinida usa o tcpserver do ucspi-tcp em alternativa."
 
 #. Type: error
 #. Description
 #: ../qmail.templates:8001
 msgid "For this reason, the smtp line in /etc/inetd.conf has been disabled."
-msgstr ""
+msgstr "Por esta razão, a linha smtp em /etc/inetd.conf foi desactivada."
 
 #. Type: error
 #. Description
@@ -163,18 +190,21 @@ msgid ""
 "smtp, rather than /etc/hosts.allow (see /usr/share/doc/qmail/README for "
 "details)."
 msgstr ""
+"Isto significa que deve configurar coisas como RELAYCLIENT através de /etc/"
+"tcp.smtp, em vez de /etc/hosts.allow (veja /usr/share/doc/qmail/README para "
+"os detalhes)."
 
 #. Type: note
 #. Description
 #: ../qmail.templates:9001
 msgid "Updating /etc/tcp.smtp database for tcpserver"
-msgstr ""
+msgstr "A actualizar base de dados /etc/tcp.smtp para o tcpserver"
 
 #. Type: boolean
 #. Description
 #: ../qmail.templates:10001
 msgid "Override pre-existing Qmail installation?"
-msgstr ""
+msgstr "Sobreescrever instalação Qmail pré-existente?"
 
 #. Type: boolean
 #. Description
@@ -183,6 +213,8 @@ msgid ""
 "An existing installation of Qmail has been detected. Please choose whether "
 "you want this installation to be overridden."
 msgstr ""
+"Foi detectada uma instalação existente do Qmail. Por favor escolha se quer "
+"sobreescrever esta instalação."
 
 #. Type: boolean
 #. Description
@@ -191,3 +223,5 @@ msgid ""
 "Do not choose this option if you need to preserve the current setup for "
 "Qmail."
 msgstr ""
+"Não escolha esta opção se precisa de preservar as configurações actuais para "
+"o Qmail."
