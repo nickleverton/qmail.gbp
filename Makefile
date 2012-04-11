@@ -1532,16 +1532,16 @@ auto_split.h
 	./compile qmail-showctl.c
 
 qmail-smtpd: \
-load qmail-smtpd.o rcpthosts.o qregex.o commands.o timeoutread.o \
+load qmail-smtpd.o rcpthosts.o commands.o timeoutread.o \
 timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o received.o \
 date822fmt.o now.o qmail.o cdb.a fd.a wait.a datetime.a getln.a \
-open.a sig.a case.a env.a stralloc.a alloc.a strerr.a substdio.a error.a str.a \
+open.a sig.a case.a env.a stralloc.a alloc.a substdio.a error.a str.a \
 fs.a auto_qmail.o socket.lib
-	./load qmail-smtpd qregex.o rcpthosts.o commands.o timeoutread.o \
+	./load qmail-smtpd rcpthosts.o commands.o timeoutread.o \
 	timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o \
 	received.o date822fmt.o now.o qmail.o cdb.a fd.a wait.a \
 	datetime.a getln.a open.a sig.a case.a env.a stralloc.a \
-	alloc.a strerr.a substdio.a error.a str.a fs.a auto_qmail.o  `cat \
+	alloc.a substdio.a error.a str.a fs.a auto_qmail.o  `cat \
 	socket.lib`
 
 qmail-smtpd.0: \
@@ -1680,10 +1680,6 @@ rcpthosts.o: \
 compile rcpthosts.c cdb.h uint32.h byte.h open.h error.h control.h \
 constmap.h stralloc.h gen_alloc.h rcpthosts.h
 	./compile rcpthosts.c
-
-qregex.o: \
-compile qregex.c qregex.h
-	./compile qregex.c
 
 readsubdir.o: \
 compile readsubdir.c readsubdir.h direntry.h fmt.h scan.h str.h \

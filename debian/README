@@ -1,7 +1,0 @@
-Things to do when debianizing a new version of qmail.
- Christian Hudon <chrish@debian.org>
-
-* Run debian/debianize-source-tree
-
-NB Programs are classified as belonging to sbin or bin according to their 
-manual page section. (section 1: bin; section 8: sbin)

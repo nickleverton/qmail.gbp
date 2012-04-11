@@ -19,7 +19,7 @@ void die_usage()
   _exit(100);
 }
 
-char *smtpdarg[] = { "/usr/sbin/qmail-smtpd", 0 };
+char *smtpdarg[] = { "bin/qmail-smtpd", 0 };
 void smtpd()
 {
   if (!env_get("PROTO")) {
@@ -37,12 +37,44 @@ void smtpd()
   _exit(111);
 }
 
-char *qreadarg[] = { "/usr/sbin/qmail-qread", 0 };
+char *qreadarg[] = { "bin/qmail-qread", 0 };
 void mailq()
 {
   execv(*qreadarg,qreadarg);
   substdio_putsflush(subfderr,"sendmail: fatal: unable to run qmail-qread\n");
   _exit(111);
+}
+
+void do_sender(s)
+const char *s;
+{
+  char *x;
+  int n;
+  int a;
+  int i;
+  
+  env_unset("QMAILNAME");
+  env_unset("MAILNAME");
+  env_unset("NAME");
+  env_unset("QMAILHOST");
+  env_unset("MAILHOST");
+
+  n = str_len(s);
+  a = str_rchr(s, '@');
+  if (a == n)
+  {
+    env_put2("QMAILUSER", s);
+    return;
+  }
+  env_put2("QMAILHOST", s + a + 1);
+
+  x = (char *) alloc((a + 1) * sizeof(char));
+  if (!x) nomem();
+  for (i = 0; i < a; i++)
+    x[i] = s[i];
+  x[i] = 0;
+  env_put2("QMAILUSER", x);
+  alloc_free(x);
 }
 
 int flagh;
@@ -113,11 +145,12 @@ char **argv;
   if (!qiargv) nomem();
  
   arg = qiargv;
-  *arg++ = "/usr/sbin/qmail-inject";
+  *arg++ = "bin/qmail-inject";
   *arg++ = (flagh ? "-H" : "-a");
   if (sender) {
     *arg++ = "-f";
     *arg++ = sender;
+    do_sender(sender);
   }
   *arg++ = "--";
   for (i = 0;i < argc;++i) *arg++ = argv[i];

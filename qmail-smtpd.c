@@ -23,15 +23,6 @@
 #include "timeoutread.h"
 #include "timeoutwrite.h"
 #include "commands.h"
-#include "qregex.h"
-#include "strerr.h"
-
-#define BMCHECK_BMF 0
-#define BMCHECK_BMFNR 1
-#define BMCHECK_BMT 2
-#define BMCHECK_BMTNR 3
-#define BMCHECK_BHELO 4
-    
 
 #define MAXHOPS 100
 unsigned int databytes = 0;
@@ -58,9 +49,7 @@ void die_control() { out("421 unable to read controls (#4.3.0)\r\n"); flush(); _
 void die_ipme() { out("421 unable to figure out my IP addresses (#4.3.0)\r\n"); flush(); _exit(1); }
 void straynewline() { out("451 See http://pobox.com/~djb/docs/smtplf.html.\r\n"); flush(); _exit(1); }
 
-void err_bmf() { out("553 sorry, your envelope sender has been denied (#5.7.1)\r\n"); }
-void err_bmt() { out("553 sorry, your envelope recipient has been denied (#5.7.1)\r\n"); }
-void err_bhelo() { out("553 sorry, your HELO host name has been denied (#5.7.1)\r\n"); }
+void err_bmf() { out("553 sorry, your envelope sender is in my badmailfrom list (#5.7.1)\r\n"); }
 void err_nogateway() { out("553 sorry, that domain isn't in my list of allowed rcpthosts (#5.7.1)\r\n"); }
 void err_unimpl(arg) char *arg; { out("502 unimplemented (#5.5.1)\r\n"); }
 void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
@@ -80,7 +69,7 @@ void smtp_greet(code) char *code;
 }
 void smtp_help(arg) char *arg;
 {
-  out("214 qmail home page: http://pobox.com/~djb/qmail.html\r\n");
+  out("214 netqmail home page: http://qmail.org/netqmail\r\n");
 }
 void smtp_quit(arg) char *arg;
 {
@@ -104,21 +93,9 @@ void dohelo(arg) char *arg; {
 
 int liphostok = 0;
 stralloc liphost = {0};
-
 int bmfok = 0;
 stralloc bmf = {0};
-
-int bmfnrok = 0;
-stralloc bmfnr = {0};
-
-int bmtok = 0;
-stralloc bmt = {0};
-
-int bmtnrok = 0;
-stralloc bmtnr = {0};
-
-int bhelook = 0;
-stralloc bhelo = {0};
+struct constmap mapbmf;
 
 void setup()
 {
@@ -137,19 +114,8 @@ void setup()
 
   bmfok = control_readfile(&bmf,"control/badmailfrom",0);
   if (bmfok == -1) die_control();
-
-  bmfnrok = control_readfile(&bmfnr,"control/badmailfromnorelay",0);
-  if (bmfnrok == -1) die_control();
-
-  bmtok = control_readfile(&bmt,"control/badmailto",0);
-  if (bmtok == -1) die_control();
-
-  bmtnrok = control_readfile(&bmtnr,"control/badmailtonorelay",0);
-  if (bmtnrok == -1) die_control();
-
-  bhelook = control_readfile(&bhelo, "control/badhelo",0);
-  if (bhelook == -1) die_control();
-  if (env_get("NOBADHELO")) bhelook = 0;
+  if (bmfok)
+    if (!constmap_init(&mapbmf,bmf.s,bmf.len,0)) die_nomem();
  
   if (control_readint(&databytes,"control/databytes") == -1) die_control();
   x = env_get("DATABYTES");
@@ -231,48 +197,14 @@ char *arg;
   return 1;
 }
 
-int bmcheck(which) int which;
+int bmfcheck()
 {
-  int i = 0;
-  int j = 0;
-  int x = 0;
-  int negate = 0;
-  static stralloc bmb = {0};
-  static stralloc curregex = {0};
-
-  if (which == BMCHECK_BMF) {
-    if (!stralloc_copy(&bmb,&bmf)) die_nomem();
-  } else if (which == BMCHECK_BMFNR) {
-    if (!stralloc_copy(&bmb,&bmfnr)) die_nomem();
-  } else if (which == BMCHECK_BMT) {
-    if (!stralloc_copy(&bmb,&bmt)) die_nomem();
-  } else if (which == BMCHECK_BMTNR) {
-    if (!stralloc_copy(&bmb,&bmtnr)) die_nomem();
-  } else if (which == BMCHECK_BHELO) {
-    if (!stralloc_copy(&bmb,&bhelo)) die_nomem();
-  } else {
-    die_control();
-  }
-
-  while (j < bmb.len) {
-    i = j;
-    while ((bmb.s[i] != '\0') && (i < bmb.len)) i++;
-    if (bmb.s[j] == '!') {
-      negate = 1;
-      j++;
-    }
-    if (!stralloc_copyb(&curregex,bmb.s + j,(i - j))) die_nomem();
-    if (!stralloc_0(&curregex)) die_nomem();
-    if (which == BMCHECK_BHELO) {
-      x = matchregex(helohost.s, curregex.s);
-    } else {
-      x = matchregex(addr.s, curregex.s);
-    }
-    if ((negate) && (x == 0)) return 1;
-    if (!(negate) && (x > 0)) return 1;
-    j = i + 1;
-    negate = 0;
-  }
+  int j;
+  if (!bmfok) return 0;
+  if (constmap(&mapbmf,addr.s,addr.len - 1)) return 1;
+  j = byte_rchr(addr.s,addr.len,'@');
+  if (j < addr.len)
+    if (constmap(&mapbmf,addr.s + j,addr.len - j - 1)) return 1;
   return 0;
 }
 
@@ -286,9 +218,7 @@ int addrallowed()
 
 
 int seenmail = 0;
-int flagbarfbmf; /* defined if seenmail */
-int flagbarfbmt;
-int flagbarfbhelo;
+int flagbarf; /* defined if seenmail */
 stralloc mailfrom = {0};
 stralloc rcptto = {0};
 
@@ -296,13 +226,11 @@ void smtp_helo(arg) char *arg;
 {
   smtp_greet("250 "); out("\r\n");
   seenmail = 0; dohelo(arg);
-  if (bhelook) flagbarfbhelo = bmcheck(BMCHECK_BHELO);
 }
 void smtp_ehlo(arg) char *arg;
 {
   smtp_greet("250-"); out("\r\n250-PIPELINING\r\n250 8BITMIME\r\n");
   seenmail = 0; dohelo(arg);
-  if (bhelook) flagbarfbhelo = bmcheck(BMCHECK_BHELO);
 }
 void smtp_rset(arg) char *arg;
 {
@@ -312,11 +240,7 @@ void smtp_rset(arg) char *arg;
 void smtp_mail(arg) char *arg;
 {
   if (!addrparse(arg)) { err_syntax(); return; }
-  flagbarfbmf = 0; /* bmcheck is skipped for empty envelope senders */
-  if ((bmfok) && (addr.len != 1)) flagbarfbmf = bmcheck(BMCHECK_BMF);
-  if ((!flagbarfbmf) && (bmfnrok) && (addr.len != 1) && (!relayclient)) {
-    flagbarfbmf = bmcheck(BMCHECK_BMFNR);
-  }
+  flagbarf = bmfcheck();
   seenmail = 1;
   if (!stralloc_copys(&rcptto,"")) die_nomem();
   if (!stralloc_copys(&mailfrom,addr.s)) die_nomem();
@@ -326,25 +250,7 @@ void smtp_mail(arg) char *arg;
 void smtp_rcpt(arg) char *arg; {
   if (!seenmail) { err_wantmail(); return; }
   if (!addrparse(arg)) { err_syntax(); return; }
-  if (flagbarfbhelo) {
-    strerr_warn4("qmail-smtpd: badhelo: <",helohost.s,"> at ",remoteip,0);
-    err_bhelo();
-    return;
-  }
-  if (flagbarfbmf) {
-    strerr_warn4("qmail-smtpd: badmailfrom: <",mailfrom.s,"> at ",remoteip,0);
-    err_bmf();
-    return;
-  }
-  if (bmtok) flagbarfbmt = bmcheck(BMCHECK_BMT);
-  if ((!flagbarfbmt) && (bmtnrok) && (!relayclient)) {
-    flagbarfbmt = bmcheck(BMCHECK_BMTNR);
-  }
-  if (flagbarfbmt) {
-    strerr_warn4("qmail-smtpd: badmailto: <",addr.s,"> at ",remoteip,0);
-    err_bmt();
-    return;
-  }
+  if (flagbarf) { err_bmf(); return; }
   if (relayclient) {
     --addr.len;
     if (!stralloc_cats(&addr,relayclient)) die_nomem();
@@ -390,7 +296,7 @@ int *hops;
   char ch;
   int state;
   int flaginheader;
-  unsigned int pos; /* number of bytes since most recent \n, if fih */
+  int pos; /* number of bytes since most recent \n, if fih */
   int flagmaybex; /* 1 if this line might match RECEIVED, if fih */
   int flagmaybey; /* 1 if this line might match \r\n, if fih */
   int flagmaybez; /* 1 if this line might match DELIVERED, if fih */

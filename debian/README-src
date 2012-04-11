@@ -1,9 +1,0 @@
-This is a feeble little package that just contains a script to unpack
-and build qmail from source, so that we don't violate Dan Bernstein's
-`no binary distribution, without approval' restriction.
-
-Hopefully this will help allow a binary package to be approved, but
-even if it doesn't it means that Debian users can use qmail without too
-much effort.
-
-Jon Marler <jmarler@debian.org>

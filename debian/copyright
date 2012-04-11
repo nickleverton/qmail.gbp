@@ -1,33 +1,55 @@
-Qmail is Copyright 1996, D. J. Bernstein.
---
+This package was debianized by Gerrit Pape <pape@smarden.org> on
+Thu, 13 Apr 2000 09:41:23 +0200.
 
-Unfortunately (from SPI's point of view) Dan Bernstein does not include
-a conventional licence for qmail, so instead you must examine his published
-documentation on the subject to determine your rights to use his software.
+It was downloaded from http://qmail.org/netqmail-1.06.tar.gz
 
-The right to distribute unmodified copies of the qmail-1.01 source is granted
-here:
+Upstream Authors: D. J. Bernstein <djb@cr.yp.to>
+  Russ Nelson <nelson@qmail.org>
+  Charles Cazabon <charlesc-software-netqmail@pyropus.ca>
+  Dave Sill <de5@sws5.ornl.gov>
+  Peter Samuel <Peter.Samuel@gormand.com.au>
+  Henning Brauer <henning@bsws.de>
+  Andrew Richards <ar-nq@acrconsulting.co.uk>
+  Richard Lyons <rick-netqmail@frob.com.au>
+  John Levine <netqmail@johnlevine.com>
+  Scott Gifford <sgifford@suspectclass.com>
+  Kyle Wheeler <kyle-netqmail@memoryhole.net>
+  Wayne Marshall
 
-  ftp://koobera.math.uic.edu/www/qmail/dist.html
+Copyright:
 
-In addition, Dan will approve distribution of specific binary packages, which
-he should have done for the Debian package that contains this file by the time
-you get to read it.
+D. J. Bernstein placed the qmail-1.03 package into the public domain.
+From http://cr.yp.to/qmail/dist.html
+ I hereby place the qmail package (in particular, qmail-1.03.tar.gz,
+ with MD5 checksum 622f65f982e380dbe86e6574f3abcb7c) into the public
+ domain.  You are free to modify the package, distribute modified
+ versions, etc.
 
-He also states (see ftp://koobera.math.uic.edu/www/softwarelaw.html)
-the following:
+James Craig Burley claims copyright on the qmail-isoc patch.
 
-  What does all this mean for the free software world? Once you've legally
-  downloaded a program, you can compile it. You can run it. You can modify
-  it. You can distribute your patches for other people to use. If you think
-  you need a license from the copyright holder, you've been bamboozled by
-  Microsoft. As long as you're not distributing the software, you have
-  nothing to worry about.
+Apart from James' copyrights, no other copyright is claimed by the
+distributors of netqmail for changes from qmail 1.03 to netqmail 1.06.
 
-Of course, this only applies to people under US jurisdiction, but Dan
-claims that similar laws are in effect in most of the countries that
-take any notice of copyright, so I suppose that one can assume that
-this encapsulates his wishes on the subject.
+The qmail-isoc patch is Copyright (C) 2004 by James Craig Burley;
+license:
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-Cheers, Phil.
-<phil@hands.com>
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+The rest of the package is in the public domain.

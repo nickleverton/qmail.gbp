@@ -267,11 +267,7 @@ void pop3_top(arg) char *arg;
  
   fd = open_read(m[i].fn);
   if (fd == -1) { err_nosuch(); return; }
-  /* okay(); */
-  puts("+OK ");
-  put(strnum,fmt_ulong(strnum,m[i].size));
-  puts(" octets\r\n");
-  flush();
+  okay(0);
   substdio_fdbuf(&ssmsg,read,fd,ssmsgbuf,sizeof(ssmsgbuf));
   blast(&ssmsg,limit);
   close(fd);
