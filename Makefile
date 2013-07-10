@@ -795,19 +795,30 @@ gen_alloc.h
 
 ipme.o: \
 compile ipme.c hassalen.h byte.h ip.h ipalloc.h ip.h gen_alloc.h \
-stralloc.h gen_alloc.h ipme.h ip.h ipalloc.h
+stralloc.h gen_alloc.h ipme.h ip.h ipalloc.h readwrite.h
 	./compile ipme.c
 
 ipmeprint: \
-load ipmeprint.o ipme.o ip.o ipalloc.o stralloc.a alloc.a substdio.a \
+load ipmeprint.o ipme.o ip.o ipalloc.o auto_qmail.o open.a getln.a stralloc.a alloc.a substdio.a \
 error.a str.a fs.a socket.lib
-	./load ipmeprint ipme.o ip.o ipalloc.o stralloc.a alloc.a \
+	./load ipmeprint ipme.o ip.o ipalloc.o auto_qmail.o open.a getln.a stralloc.a alloc.a \
 	substdio.a error.a str.a fs.a  `cat socket.lib`
 
 ipmeprint.o: \
 compile ipmeprint.c subfd.h substdio.h substdio.h ip.h ipme.h ip.h \
-ipalloc.h ip.h gen_alloc.h exit.h
+ipalloc.h ip.h gen_alloc.h exit.h auto_qmail.h
 	./compile ipmeprint.c
+
+ipmetest: \
+load ipmetest.o ipme.o ip.o ipalloc.o auto_qmail.o open.a getln.a stralloc.a alloc.a substdio.a \
+error.a str.a fs.a env.a socket.lib
+	./load ipmetest ipme.o ip.o ipalloc.o auto_qmail.o open.a getln.a stralloc.a alloc.a \
+	substdio.a error.a env.a str.a fs.a `cat socket.lib`
+
+ipmetest.o: \
+compile ipmetest.c subfd.h substdio.h substdio.h ip.h ipme.h ip.h \
+ipalloc.h ip.h gen_alloc.h exit.h auto_qmail.h
+	./compile ipmetest.c
 
 it: \
 qmail-local qmail-lspawn qmail-getpw qmail-remote qmail-rspawn \
@@ -816,7 +827,7 @@ predate datemail mailsubj qmail-upq qmail-showctl qmail-newu \
 qmail-pw2u qmail-qread qmail-qstat qmail-tcpto qmail-tcpok \
 qmail-pop3d qmail-popup qmail-qmqpc qmail-qmqpd qmail-qmtpd \
 qmail-smtpd sendmail tcp-env qmail-newmrh config config-fast dnscname \
-dnsptr dnsip dnsmxip dnsfq hostname ipmeprint qreceipt qsmhook qbiff \
+dnsptr dnsip dnsmxip dnsfq hostname ipmeprint ipmetest qreceipt qsmhook qbiff \
 forward preline condredirect bouncesaying except maildirmake \
 maildir2mbox maildirwatch qail elq pinq idedit install-big install \
 instcheck home home+df proc proc+df binm1 binm1+df binm2 binm2+df \
@@ -1798,7 +1809,7 @@ qmail-popup.c qmail-pw2u.c qmail-qmqpc.c qmail-qmqpd.c qmail-qmtpd.c \
 qmail-qread.c qmail-qstat.sh qmail-queue.c qmail-remote.c \
 qmail-rspawn.c qmail-send.c qmail-showctl.c qmail-smtpd.c \
 qmail-start.c qmail-tcpok.c qmail-tcpto.c spawn.c dnscname.c dnsfq.c \
-dnsip.c dnsmxip.c dnsptr.c hostname.c ipmeprint.c tcp-env.c \
+dnsip.c dnsmxip.c dnsptr.c hostname.c ipmeprint.c ipmetest.c tcp-env.c \
 sendmail.c qreceipt.c qsmhook.c qbiff.c forward.c preline.c predate.c \
 except.c bouncesaying.c condredirect.c maildirmake.c maildir2mbox.c \
 maildirwatch.c splogger.c qail.sh elq.sh pinq.sh qmail-upq.sh \

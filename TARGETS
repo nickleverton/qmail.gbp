@@ -280,6 +280,8 @@ hostname.o
 hostname
 ipmeprint.o
 ipmeprint
+ipmetest.o
+ipmetest
 qreceipt.o
 qreceipt
 qsmhook.o

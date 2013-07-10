@@ -1,4 +1,11 @@
-qmail (1.03-49.2+njl50.0) unstable; urgency=low
+qmail (1.03-49.2+njl50.2) unstable; urgency=low
+
+  * Add qmail-remove-cname-check.patch to avoid useless and buggy CNAME lookups.
+  * Build for Wheezy
+
+ -- Nick Leverton <nick@leverton.org>  Wed, 10 Jul 2013 12:59:57 +0100
+
+qmail (1.03-49.2+njl50.1) unstable; urgency=low
 
   * The following patches have been applied for Debian automagically:
     netscape-progress - Fixes compatibility bug in POP3 daemon
@@ -9,9 +16,14 @@ qmail (1.03-49.2+njl50.0) unstable; urgency=low
     qmail_local - Fixes memory corruption in certain .qmail files
   * Import qmail-authentication-0.7.1 patch from fehcom.de with adaptions
     for Debian (todo: put it into debian/patches).
+  * Remove qmail-0.0.0.0 and replace by qmail-1.03-moreipme-0.6.patch.
+  * Add sendmail-flagf.patch from netqmail so that /usr/sbin/sendmail's
+    -f option sets the default From header field.
+  * Add qmail-1.03-fastremote-3.patch to improve efficiency on sending
+    large messages.
   * Build for Lenny
 
- -- Nick Leverton <nick@leverton.org>  Fri, 21 Jan 2011 21:43:39 +0000
+ -- Nick Leverton <nick@leverton.org>  Sat, 22 Jan 2011 11:05:57 +0000
 
 qmail (1.03-49.2) unstable; urgency=low
 
