@@ -19,12 +19,10 @@ extern int res_search();
 static unsigned short getshort(c) unsigned char *c;
 { unsigned short u; u = c[0]; return (u << 8) + c[1]; }
 
-static struct { unsigned char *buf; } response;
-static int responsebuflen = 0;
+static union { HEADER hdr; unsigned char buf[PACKETSZ]; } response;
 static int responselen;
 static unsigned char *responseend;
 static unsigned char *responsepos;
-static u_long saveresoptions;
 
 static int numanswers;
 static char name[MAXDNAME];
@@ -45,33 +43,18 @@ int type;
  errno = 0;
  if (!stralloc_copy(&glue,domain)) return DNS_MEM;
  if (!stralloc_0(&glue)) return DNS_MEM;
- if (!responsebuflen)
-  if (response.buf = (unsigned char *)alloc(PACKETSZ+1))
-   responsebuflen = PACKETSZ+1;
-  else return DNS_MEM;
-
- responselen = lookup(glue.s,C_IN,type,response.buf,responsebuflen);
- if ((responselen >= responsebuflen) ||
-     (responselen > 0 && (((HEADER *)response.buf)->tc)))
-  {
-   if (responsebuflen < 65536)
-    if (alloc_re(&response.buf, responsebuflen, 65536))
-     responsebuflen = 65536;
-    else return DNS_MEM;
-    saveresoptions = _res.options;
-    _res.options |= RES_USEVC;
-    responselen = lookup(glue.s,C_IN,type,response.buf,responsebuflen);
-    _res.options = saveresoptions;
-  }
+ responselen = lookup(glue.s,C_IN,type,response.buf,sizeof(response));
  if (responselen <= 0)
   {
    if (errno == ECONNREFUSED) return DNS_SOFT;
    if (h_errno == TRY_AGAIN) return DNS_SOFT;
    return DNS_HARD;
   }
+ if (responselen >= sizeof(response))
+   responselen = sizeof(response);
  responseend = response.buf + responselen;
  responsepos = response.buf + sizeof(HEADER);
- n = ntohs(((HEADER *)response.buf)->qdcount);
+ n = ntohs(response.hdr.qdcount);
  while (n-- > 0)
   {
    i = dn_expand(response.buf,responseend,responsepos,name,MAXDNAME);
@@ -81,7 +64,7 @@ int type;
    if (i < QFIXEDSZ) return DNS_SOFT;
    responsepos += QFIXEDSZ;
   }
- numanswers = ntohs(((HEADER *)response.buf)->ancount);
+ numanswers = ntohs(response.hdr.ancount);
  return 0;
 }
 
@@ -204,7 +187,32 @@ int flagsearch;
 int dns_cname(sa)
 stralloc *sa;
 {
- return 0;
+ int r;
+ int loop;
+ for (loop = 0;loop < 10;++loop)
+  {
+   if (!sa->len) return loop;
+   if (sa->s[sa->len - 1] == ']') return loop;
+   if (sa->s[sa->len - 1] == '.') { --sa->len; continue; }
+   switch(resolve(sa,T_ANY))
+    {
+     case DNS_MEM: return DNS_MEM;
+     case DNS_SOFT: return DNS_SOFT;
+     case DNS_HARD: return loop;
+     default:
+       while ((r = findname(T_CNAME)) != 2)
+	{
+	 if (r == DNS_SOFT) return DNS_SOFT;
+	 if (r == 1)
+	  {
+	   if (!stralloc_copys(sa,name)) return DNS_MEM;
+	   break;
+	  }
+	}
+       if (r == 2) return loop;
+    }
+  }
+ return DNS_HARD; /* alias loop */
 }
 
 #define FMT_IAA 40

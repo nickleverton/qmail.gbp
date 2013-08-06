@@ -1,25 +1,26 @@
-Source: qmail
-Maintainer: Jon Marler <jmarler@debian.org>
-Section: non-free/mail
+Source: netqmail
+Section: mail
 Priority: extra
-Build-Depends: dpkg-dev (>= 1.4.0.20), patch (>= 2.5-0bo1), fakeroot | sudo, groff-base, adduser, po-debconf
-Standards-Version: 3.8.0
+Maintainer: Gerrit Pape <pape@smarden.org>
+Build-Depends: qmail-uids-gids (>> 1.06), groff-base
+Standards-Version: 3.9.3.1
 
-Package: qmail-src
+Package: qmail
+Architecture: any
+Depends: ${shlibs:Depends}, qmail-uids-gids (>> 1.06)
+Recommends: qmail-run (>= 2.0.0)
+Suggests: fastforward, dot-forward, qmail-tools
+Description: a secure, reliable, efficient, simple message transfer agent
+ qmail is meant as a replacement for the entire sendmail-binmail system on
+ typical Internet-connected UNIX hosts.
+ .
+ This package is based on the netqmail distribution of qmail, put
+ together by a motley krewe of qmail contributors (see the README).
+ It is derived from Daniel Bernstein's qmail-1.03 plus bug fixes,
+ a few feature enhancements, and some documentation.
+
+Package: qmail-uids-gids
 Architecture: all
-Depends: dpkg-dev (>= 1.4.0.20), patch (>= 2.5-0bo1), build-essential, fakeroot | sudo, groff-base, adduser, libc6-dev
-Conflicts: qmail-run, qmail-uids-gids
-Recommends: ucspi-tcp-src, procmail
-Description: Source only package for building qmail binary package
- qmail is a secure, reliable, efficient, simple mail transport system.
- .
- To build a binary deb package, first install the qmail-src package, then
- type the command "build-qmail".  If you try "apt-get source --build qmail-src"
- only the qmail-src package will be built.  You will need to install qmail-src
- and type the command "build-qmail" to get a usable binary package of qmail.
- Also be sure to build and install ucspi-tcp before installing the binary qmail
- package.  Install the ucspi-tcp-src package to get ucspi-tcp.
- .
- This package builds a binary .deb that is FHS compliant and conforms to the
- Debian standards guidelines.  The resulting binary packages are not suitable
- for re-distribution.
+Depends: passwd, adduser
+Description: user ids and group ids for qmail
+ This package is mandatory for building and running the qmail package.

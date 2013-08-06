@@ -4,7 +4,7 @@
 #include "ip.h"
 #include "ipalloc.h"
 
-extern ipalloc ipme, ipme_mask, notipme, notipme_mask;
+extern ipalloc ipme;
 
 extern int ipme_init();
 extern int ipme_is();

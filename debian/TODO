@@ -1,4 +1,0 @@
-* Write nice qmailconfig script
-* Add aliases for postmaster, root and mailer-daemon
-* Enable pop3d daemon?
-* Edit /etc/login.defs:MAIL_DIR/MAIL_FILE ?

@@ -214,12 +214,7 @@ void main()
     _exit(111);
   }
 
-  do_lst("badhelo","Any HELO host name is allowed.",""," HELO host name denied if it matches this pattern.");
-  do_lst("authsenders","No authenticated SMTP sender.","Authenicated SMTP sender: ","");
-  do_lst("badmailfrom","Any MAIL FROM is allowed.",""," MAIL FROM denied if it matches this pattern.");
-  do_lst("badmailfromnorelay","Any MAIL FROM is allowed.",""," MAIL FROM denied if it matches this pattern and RELAYCLIENT is not set.");
-  do_lst("badmailto","No RCPT TO are specifically denied.",""," RCPT TO denied if it matches this pattern.");
-  do_lst("badmailtonorelay","No RCPT TO are specifically denied.",""," RCPT TO denied if it matches this pattern and RELAYCLIENT is not set.");
+  do_lst("badmailfrom","Any MAIL FROM is allowed.",""," not accepted in MAIL FROM.");
   do_str("bouncefrom",0,"MAILER-DAEMON","Bounce user name is ");
   do_str("bouncehost",1,"bouncehost","Bounce host name is ");
   do_int("concurrencylocal","10","Local concurrency is ","");
@@ -235,8 +230,6 @@ void main()
   do_str("localiphost",1,"localiphost","Local IP address becomes ");
   do_lst("locals","Messages for me are delivered locally.","Messages for "," are delivered locally.");
   do_str("me",0,"undefined! Uh-oh","My name is ");
-  do_lst("moreipme","No additional IP addresses are me.","IP address "," is me.");
-  do_lst("notipme","All of my IP addresses are me.","IP address "," is not me.");
   do_lst("percenthack","The percent hack is not allowed.","The percent hack is allowed for user%host@",".");
   do_str("plusdomain",1,"plusdomain","Plus domain name is ");
   do_lst("qmqpservers","No QMQP servers.","QMQP server: ",".");
@@ -272,12 +265,9 @@ void main()
   while (d = readdir(dir)) {
     if (str_equal(d->d_name,".")) continue;
     if (str_equal(d->d_name,"..")) continue;
-    if (str_equal(d->d_name,"authsenders")) continue;
-    if (str_equal(d->d_name,"badhelo")) continue;
+    if (str_equal(d->d_name,"bouncefrom")) continue;
+    if (str_equal(d->d_name,"bouncehost")) continue;
     if (str_equal(d->d_name,"badmailfrom")) continue;
-    if (str_equal(d->d_name,"badmailfromnorelay")) continue;
-    if (str_equal(d->d_name,"badmailto")) continue;
-    if (str_equal(d->d_name,"badmailtonorelay")) continue;
     if (str_equal(d->d_name,"bouncefrom")) continue;
     if (str_equal(d->d_name,"bouncehost")) continue;
     if (str_equal(d->d_name,"concurrencylocal")) continue;
@@ -293,10 +283,8 @@ void main()
     if (str_equal(d->d_name,"localiphost")) continue;
     if (str_equal(d->d_name,"locals")) continue;
     if (str_equal(d->d_name,"me")) continue;
-    if (str_equal(d->d_name,"moreipme")) continue;
     if (str_equal(d->d_name,"morercpthosts")) continue;
     if (str_equal(d->d_name,"morercpthosts.cdb")) continue;
-    if (str_equal(d->d_name,"notipme")) continue;
     if (str_equal(d->d_name,"percenthack")) continue;
     if (str_equal(d->d_name,"plusdomain")) continue;
     if (str_equal(d->d_name,"qmqpservers")) continue;

@@ -23,20 +23,6 @@
 #include "timeoutread.h"
 #include "timeoutwrite.h"
 #include "commands.h"
-#include "qregex.h"
-#include "strerr.h"
-#include "wait.h"
-
-#define CRAM_MD5
-#define AUTHSLEEP 5
-#define SUBMISSION "587"
-
-#define BMCHECK_BMF 0
-#define BMCHECK_BMFNR 1
-#define BMCHECK_BMT 2
-#define BMCHECK_BMTNR 3
-#define BMCHECK_BHELO 4
-    
 
 #define MAXHOPS 100
 unsigned int databytes = 0;
@@ -63,10 +49,7 @@ void die_control() { out("421 unable to read controls (#4.3.0)\r\n"); flush(); _
 void die_ipme() { out("421 unable to figure out my IP addresses (#4.3.0)\r\n"); flush(); _exit(1); }
 void straynewline() { out("451 See http://pobox.com/~djb/docs/smtplf.html.\r\n"); flush(); _exit(1); }
 
-void err_size() { out("552 sorry, that message size exceeds my databytes limit (#5.3.4)\r\n"); }
-void err_bmf() { out("553 sorry, your envelope sender has been denied (#5.7.1)\r\n"); }
-void err_bmt() { out("553 sorry, your envelope recipient has been denied (#5.7.1)\r\n"); }
-void err_bhelo() { out("553 sorry, your HELO host name has been denied (#5.7.1)\r\n"); }
+void err_bmf() { out("553 sorry, your envelope sender is in my badmailfrom list (#5.7.1)\r\n"); }
 void err_nogateway() { out("553 sorry, that domain isn't in my list of allowed rcpthosts (#5.7.1)\r\n"); }
 void err_unimpl(arg) char *arg; { out("502 unimplemented (#5.5.1)\r\n"); }
 void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
@@ -76,17 +59,6 @@ void err_noop(arg) char *arg; { out("250 ok\r\n"); }
 void err_vrfy(arg) char *arg; { out("252 send some mail, i'll try my best\r\n"); }
 void err_qqt() { out("451 qqt failure (#4.3.0)\r\n"); }
 
-int err_child() { out("454 oops, problem with child and I can't auth (#4.3.0)\r\n"); return -1; }
-int err_fork() { out("454 oops, child won't start and I can't auth (#4.3.0)\r\n"); return -1; }
-int err_pipe() { out("454 oops, unable to open pipe and I can't auth (#4.3.0)\r\n"); return -1; }
-int err_write() { out("454 oops, unable to write pipe and I can't auth (#4.3.0)\r\n"); return -1; }
-void err_authd() { out("503 you're already authenticated (#5.5.0)\r\n"); }
-void err_authmail() { out("503 no auth during mail transaction (#5.5.0)\r\n"); }
-int err_noauth() { out("504 auth type unimplemented (#5.5.1)\r\n"); return -1; }
-int err_authabrt() { out("501 auth exchange canceled (#5.0.0)\r\n"); return -1; }
-int err_input() { out("501 malformed auth input (#5.5.4)\r\n"); return -1; }
-void err_authfail() { out("535 authentication failed (#5.7.1)\r\n"); }
-void err_submission() { out("530 Authorization required (#5.7.1) \r\n"); }
 
 stralloc greeting = {0};
 
@@ -97,20 +69,17 @@ void smtp_greet(code) char *code;
 }
 void smtp_help(arg) char *arg;
 {
-  out("214 qmail home page: http://pobox.com/~djb/qmail.html\r\n");
+  out("214 netqmail home page: http://qmail.org/netqmail\r\n");
 }
 void smtp_quit(arg) char *arg;
 {
   smtp_greet("221 "); out("\r\n"); flush(); _exit(0);
 }
 
-char *protocol;
 char *remoteip;
 char *remotehost;
 char *remoteinfo;
 char *local;
-char *localport;
-char *submission;
 char *relayclient;
 
 stralloc helohost = {0};
@@ -124,21 +93,9 @@ void dohelo(arg) char *arg; {
 
 int liphostok = 0;
 stralloc liphost = {0};
-
 int bmfok = 0;
 stralloc bmf = {0};
-
-int bmfnrok = 0;
-stralloc bmfnr = {0};
-
-int bmtok = 0;
-stralloc bmt = {0};
-
-int bmtnrok = 0;
-stralloc bmtnr = {0};
-
-int bhelook = 0;
-stralloc bhelo = {0};
+struct constmap mapbmf;
 
 void setup()
 {
@@ -152,43 +109,28 @@ void setup()
   if (liphostok == -1) die_control();
   if (control_readint(&timeout,"control/timeoutsmtpd") == -1) die_control();
   if (timeout <= 0) timeout = 1;
+
   if (rcpthosts_init() == -1) die_control();
 
   bmfok = control_readfile(&bmf,"control/badmailfrom",0);
   if (bmfok == -1) die_control();
-
-  bmfnrok = control_readfile(&bmfnr,"control/badmailfromnorelay",0);
-  if (bmfnrok == -1) die_control();
-
-  bmtok = control_readfile(&bmt,"control/badmailto",0);
-  if (bmtok == -1) die_control();
-
-  bmtnrok = control_readfile(&bmtnr,"control/badmailtonorelay",0);
-  if (bmtnrok == -1) die_control();
-
-  bhelook = control_readfile(&bhelo, "control/badhelo",0);
-  if (bhelook == -1) die_control();
-  if (env_get("NOBADHELO")) bhelook = 0;
+  if (bmfok)
+    if (!constmap_init(&mapbmf,bmf.s,bmf.len,0)) die_nomem();
  
   if (control_readint(&databytes,"control/databytes") == -1) die_control();
   x = env_get("DATABYTES");
   if (x) { scan_ulong(x,&u); databytes = u; }
   if (!(databytes + 1)) --databytes;
  
-  protocol = "SMTP";
   remoteip = env_get("TCPREMOTEIP");
   if (!remoteip) remoteip = "unknown";
   local = env_get("TCPLOCALHOST");
   if (!local) local = env_get("TCPLOCALIP");
   if (!local) local = "unknown";
-  localport = env_get("TCPLOCALPORT");
-  if (!localport) localport = "0";
   remotehost = env_get("TCPREMOTEHOST");
   if (!remotehost) remotehost = "unknown";
   remoteinfo = env_get("TCPREMOTEINFO");
   relayclient = env_get("RELAYCLIENT");
-  submission = env_get("SUBMISSIONPORT");
-  if (!submission) submission= SUBMISSION;
   dohelo(remotehost);
 }
 
@@ -255,48 +197,14 @@ char *arg;
   return 1;
 }
 
-int bmcheck(which) int which;
+int bmfcheck()
 {
-  int i = 0;
-  int j = 0;
-  int x = 0;
-  int negate = 0;
-  static stralloc bmb = {0};
-  static stralloc curregex = {0};
-
-  if (which == BMCHECK_BMF) {
-    if (!stralloc_copy(&bmb,&bmf)) die_nomem();
-  } else if (which == BMCHECK_BMFNR) {
-    if (!stralloc_copy(&bmb,&bmfnr)) die_nomem();
-  } else if (which == BMCHECK_BMT) {
-    if (!stralloc_copy(&bmb,&bmt)) die_nomem();
-  } else if (which == BMCHECK_BMTNR) {
-    if (!stralloc_copy(&bmb,&bmtnr)) die_nomem();
-  } else if (which == BMCHECK_BHELO) {
-    if (!stralloc_copy(&bmb,&bhelo)) die_nomem();
-  } else {
-    die_control();
-  }
-
-  while (j < bmb.len) {
-    i = j;
-    while ((bmb.s[i] != '\0') && (i < bmb.len)) i++;
-    if (bmb.s[j] == '!') {
-      negate = 1;
-      j++;
-    }
-    if (!stralloc_copyb(&curregex,bmb.s + j,(i - j))) die_nomem();
-    if (!stralloc_0(&curregex)) die_nomem();
-    if (which == BMCHECK_BHELO) {
-      x = matchregex(helohost.s, curregex.s);
-    } else {
-      x = matchregex(addr.s, curregex.s);
-    }
-    if ((negate) && (x == 0)) return 1;
-    if (!(negate) && (x > 0)) return 1;
-    j = i + 1;
-    negate = 0;
-  }
+  int j;
+  if (!bmfok) return 0;
+  if (constmap(&mapbmf,addr.s,addr.len - 1)) return 1;
+  j = byte_rchr(addr.s,addr.len,'@');
+  if (j < addr.len)
+    if (constmap(&mapbmf,addr.s + j,addr.len - j - 1)) return 1;
   return 0;
 }
 
@@ -308,94 +216,21 @@ int addrallowed()
   return r;
 }
 
+
 int seenmail = 0;
-int flagbarfbmf; /* defined if seenmail */
-int flagbarfbmt;
-int flagbarfbhelo;
+int flagbarf; /* defined if seenmail */
 stralloc mailfrom = {0};
 stralloc rcptto = {0};
-int flagauth = 0;
-int flagsize;
-stralloc fuser = {0};
-stralloc mfparms = {0};
-
-int mailfrom_size(arg) char *arg;
-{
-  long r;
-  unsigned long sizebytes = 0;
-
-  scan_ulong(arg,&r);
-  sizebytes = r;
-  if (databytes) if (sizebytes > databytes) return 1;
-  return 0;
-}
-
-void mailfrom_auth(arg,len) 
-char *arg; 
-int len;
-{
-  if (!stralloc_copys(&fuser,"")) die_nomem();
-  if (case_starts(arg,"<>")) { if (!stralloc_cats(&fuser,"unknown")) die_nomem(); }
-  else 
-    while (len) {
-      if (*arg == '+') {
-        if (case_starts(arg,"+3D")) { arg=arg+2; len=len-2; if (!stralloc_cats(&fuser,"=")) die_nomem(); }
-        if (case_starts(arg,"+2B")) { arg=arg+2; len=len-2; if (!stralloc_cats(&fuser,"+")) die_nomem(); }
-      }
-      else
-        if (!stralloc_catb(&fuser,arg,1)) die_nomem();
-      arg++; len--;
-    }
-  if(!stralloc_0(&fuser)) die_nomem();
-  if (!remoteinfo) {
-    remoteinfo = fuser.s;
-    if (!env_unset("TCPREMOTEINFO")) die_read();
-    if (!env_put2("TCPREMOTEINFO",remoteinfo)) die_nomem();
-  }
-}
-
-void mailfrom_parms(arg) char *arg;
-{
-  int i;
-  int len;
-
-    len = str_len(arg);
-    if (!stralloc_copys(&mfparms,"")) die_nomem;
-    i = byte_chr(arg,len,'>');
-    if (i > 4 && i < len) {
-      while (len) {
-        arg++; len--; 
-        if (*arg == ' ' || *arg == '\0' ) {
-           if (case_starts(mfparms.s,"SIZE=")) if (mailfrom_size(mfparms.s+5)) { flagsize = 1; return; }
-           if (case_starts(mfparms.s,"AUTH=")) mailfrom_auth(mfparms.s+5,mfparms.len-5);  
-           if (!stralloc_copys(&mfparms,"")) die_nomem;
-        }
-        else
-          if (!stralloc_catb(&mfparms,arg,1)) die_nomem; 
-      }
-    }
-}
 
 void smtp_helo(arg) char *arg;
 {
   smtp_greet("250 "); out("\r\n");
   seenmail = 0; dohelo(arg);
-  if (bhelook) flagbarfbhelo = bmcheck(BMCHECK_BHELO);
 }
 void smtp_ehlo(arg) char *arg;
 {
-  char size[FMT_ULONG];
-  size[fmt_ulong(size,(unsigned int) databytes)] = 0;
-  smtp_greet("250-"); 
-  out("\r\n250-PIPELINING\r\n250-8BITMIME\r\n");
-  out("250-SIZE "); out(size); out("\r\n");
-#ifdef CRAM_MD5
-  out("250 AUTH LOGIN PLAIN CRAM-MD5\r\n");
-#else
-  out("250 AUTH LOGIN PLAIN\r\n");
-#endif
+  smtp_greet("250-"); out("\r\n250-PIPELINING\r\n250 8BITMIME\r\n");
   seenmail = 0; dohelo(arg);
-  if (bhelook) flagbarfbhelo = bmcheck(BMCHECK_BHELO);
 }
 void smtp_rset(arg) char *arg;
 {
@@ -404,17 +239,8 @@ void smtp_rset(arg) char *arg;
 }
 void smtp_mail(arg) char *arg;
 {
-  if (str_equal(localport,submission)) 
-    if (!flagauth) { err_submission(); return; }
   if (!addrparse(arg)) { err_syntax(); return; }
-  flagsize = 0;
-  mailfrom_parms(arg);
-  if (flagsize) { err_size(); return; }
-  flagbarfbmf = 0; /* bmcheck is skipped for empty envelope senders */
-  if ((bmfok) && (addr.len != 1)) flagbarfbmf = bmcheck(BMCHECK_BMF);
-  if ((!flagbarfbmf) && (bmfnrok) && (addr.len != 1) && (!relayclient)) {
-    flagbarfbmf = bmcheck(BMCHECK_BMFNR);
-  }
+  flagbarf = bmfcheck();
   seenmail = 1;
   if (!stralloc_copys(&rcptto,"")) die_nomem();
   if (!stralloc_copys(&mailfrom,addr.s)) die_nomem();
@@ -424,25 +250,7 @@ void smtp_mail(arg) char *arg;
 void smtp_rcpt(arg) char *arg; {
   if (!seenmail) { err_wantmail(); return; }
   if (!addrparse(arg)) { err_syntax(); return; }
-  if (flagbarfbhelo) {
-    strerr_warn4("qmail-smtpd: badhelo: <",helohost.s,"> at ",remoteip,0);
-    err_bhelo();
-    return;
-  }
-  if (flagbarfbmf) {
-    strerr_warn4("qmail-smtpd: badmailfrom: <",mailfrom.s,"> at ",remoteip,0);
-    err_bmf();
-    return;
-  }
-  if (bmtok) flagbarfbmt = bmcheck(BMCHECK_BMT);
-  if ((!flagbarfbmt) && (bmtnrok) && (!relayclient)) {
-    flagbarfbmt = bmcheck(BMCHECK_BMTNR);
-  }
-  if (flagbarfbmt) {
-    strerr_warn4("qmail-smtpd: badmailto: <",addr.s,"> at ",remoteip,0);
-    err_bmt();
-    return;
-  }
+  if (flagbarf) { err_bmf(); return; }
   if (relayclient) {
     --addr.len;
     if (!stralloc_cats(&addr,relayclient)) die_nomem();
@@ -488,7 +296,7 @@ int *hops;
   char ch;
   int state;
   int flaginheader;
-  unsigned int pos; /* number of bytes since most recent \n, if fih */
+  int pos; /* number of bytes since most recent \n, if fih */
   int flagmaybex; /* 1 if this line might match RECEIVED, if fih */
   int flagmaybey; /* 1 if this line might match \r\n, if fih */
   int flagmaybez; /* 1 if this line might match DELIVERED, if fih */
@@ -570,7 +378,7 @@ void smtp_data(arg) char *arg; {
   qp = qmail_qp(&qqt);
   out("354 go ahead\r\n");
  
-  received(&qqt,protocol,local,remoteip,remotehost,remoteinfo,fakehelo);
+  received(&qqt,"SMTP",local,remoteip,remotehost,remoteinfo,fakehelo);
   blast(&hops);
   hops = (hops >= MAXHOPS);
   if (hops) qmail_fail(&qqt);
@@ -580,241 +388,16 @@ void smtp_data(arg) char *arg; {
   qqx = qmail_close(&qqt);
   if (!*qqx) { acceptmessage(qp); return; }
   if (hops) { out("554 too many hops, this message is looping (#5.4.6)\r\n"); return; }
-  if (databytes) if (!bytestooverflow) { err_size(); return; }
+  if (databytes) if (!bytestooverflow) { out("552 sorry, that message size exceeds my databytes limit (#5.3.4)\r\n"); return; }
   if (*qqx == 'D') out("554 "); else out("451 ");
   out(qqx + 1);
   out("\r\n");
 }
 
-/* this file is too long ----------------------------------------- SMTP AUTH */
-
-char unique[FMT_ULONG + FMT_ULONG + 3];
-static stralloc authin = {0};   /* input from SMTP client */
-static stralloc user = {0};     /* authorization user-id */
-static stralloc pass = {0};     /* plain passwd or digest */
-static stralloc resp = {0};     /* b64 response */
-#ifdef CRAM_MD5
-static stralloc chal = {0};     /* plain challenge */
-static stralloc slop = {0};     /* b64 challenge */
-#endif
-
-char **childargs;
-char ssauthbuf[512];
-substdio ssauth = SUBSTDIO_FDBUF(safewrite,3,ssauthbuf,sizeof(ssauthbuf));
-
-int authgetl(void) {
-  int i;
-
-  if (!stralloc_copys(&authin,"")) die_nomem();
-  for (;;) {
-    if (!stralloc_readyplus(&authin,1)) die_nomem(); /* XXX */
-    i = substdio_get(&ssin,authin.s + authin.len,1);
-    if (i != 1) die_read();
-    if (authin.s[authin.len] == '\n') break;
-    ++authin.len;
-  }
-
-  if (authin.len > 0) if (authin.s[authin.len - 1] == '\r') --authin.len;
-  authin.s[authin.len] = 0;
-  if (*authin.s == '*' && *(authin.s + 1) == 0) { return err_authabrt(); }
-  if (authin.len == 0) { return err_input(); }
-  return authin.len;
-}
-
-int authenticate(void)
-{
-  int child;
-  int wstat;
-  int pi[2];
-
-  if (!stralloc_0(&user)) die_nomem();
-  if (!stralloc_0(&pass)) die_nomem();
-#ifdef CRAM_MD5
-  if (!stralloc_0(&chal)) die_nomem();
-#endif
-
-  if (pipe(pi) == -1) return err_pipe();
-  switch(child = fork()) {
-    case -1:
-      return err_fork();
-    case 0:
-      close(pi[1]);
-      if(fd_copy(3,pi[0]) == -1) return err_pipe();
-      sig_pipedefault();
-        execvp(*childargs, childargs);
-      _exit(1);
-  }
-  close(pi[0]);
-
-  substdio_fdbuf(&ssauth,write,pi[1],ssauthbuf,sizeof ssauthbuf);
-  if (substdio_put(&ssauth,user.s,user.len) == -1) return err_write();
-  if (substdio_put(&ssauth,pass.s,pass.len) == -1) return err_write();
-#ifdef CRAM_MD5
-  if (substdio_put(&ssauth,chal.s,chal.len) == -1) return err_write();
-#endif
-  if (substdio_flush(&ssauth) == -1) return err_write();
-
-  close(pi[1]);
-#ifdef CRAM_MD5
-  if (!stralloc_copys(&chal,"")) die_nomem();
-  if (!stralloc_copys(&slop,"")) die_nomem();
-#endif
-  byte_zero(ssauthbuf,sizeof ssauthbuf);
-  if (wait_pid(&wstat,child) == -1) return err_child();
-  if (wait_crashed(wstat)) return err_child();
-  if (wait_exitcode(wstat)) { sleep(AUTHSLEEP); return 1; } /* no */
-  return 0; /* yes */
-}
-
-int auth_login(arg) char *arg;
-{
-  int r;
-
-  if (*arg) {
-    if (r = b64decode(arg,str_len(arg),&user) == 1) return err_input();
-  }
-  else {
-    out("334 VXNlcm5hbWU6\r\n"); flush();       /* Username: */
-    if (authgetl() < 0) return -1;
-    if (r = b64decode(authin.s,authin.len,&user) == 1) return err_input();
-  }
-  if (r == -1) die_nomem();
-
-  out("334 UGFzc3dvcmQ6\r\n"); flush();         /* Password: */
-
-  if (authgetl() < 0) return -1;
-  if (r = b64decode(authin.s,authin.len,&pass) == 1) return err_input();
-  if (r == -1) die_nomem();
-
-  if (!user.len || !pass.len) return err_input();
-  return authenticate();
-}
-
-int auth_plain(arg) char *arg;
-{
-  int r, id = 0;
-
-  if (*arg) {
-    if (r = b64decode(arg,str_len(arg),&resp) == 1) return err_input();
-  }
-  else {
-    out("334 \r\n"); flush();
-    if (authgetl() < 0) return -1;
-    if (r = b64decode(authin.s,authin.len,&resp) == 1) return err_input();
-  }
-  if (r == -1 || !stralloc_0(&resp)) die_nomem();
-  while (resp.s[id]) id++;                       /* "authorize-id\0userid\0passwd\0" */
-
-  if (resp.len > id + 1)
-    if (!stralloc_copys(&user,resp.s + id + 1)) die_nomem();
-  if (resp.len > id + user.len + 2)
-    if (!stralloc_copys(&pass,resp.s + id + user.len + 2)) die_nomem();
-
-  if (!user.len || !pass.len) return err_input();
-  return authenticate();
-}
-
-#ifdef CRAM_MD5
-int auth_cram()
-{
-  int i, r;
-  char *s;
-
-  s = unique;                                           /* generate challenge */
-  s += fmt_uint(s,getpid());
-  *s++ = '.';
-  s += fmt_ulong(s,(unsigned long) now());
-  *s++ = '@';
-  *s++ = 0;
-  if (!stralloc_copys(&chal,"<")) die_nomem();
-  if (!stralloc_cats(&chal,unique)) die_nomem();
-  if (!stralloc_cats(&chal,local)) die_nomem();
-  if (!stralloc_cats(&chal,">")) die_nomem();
-  if (b64encode(&chal,&slop) < 0) die_nomem();
-  if (!stralloc_0(&slop)) die_nomem();
-
-  out("334 ");                                          /* "334 base64_challenge \r\n" */
-  out(slop.s);
-  out("\r\n");
-  flush();
-
-  if (authgetl() < 0) return -1;                        /* got response */
-  if (r = b64decode(authin.s,authin.len,&resp) == 1) return err_input();
-  if (r == -1 || !stralloc_0(&resp)) die_nomem();
-
-  i = str_rchr(resp.s,' ');
-  s = resp.s + i;
-  while (*s == ' ') ++s;
-  resp.s[i] = 0;
-  if (!stralloc_copys(&user,resp.s)) die_nomem();       /* userid */
-  if (!stralloc_copys(&pass,s)) die_nomem();            /* digest */
-
-  if (!user.len || !pass.len) return err_input();
-  return authenticate();
-}
-#endif
-
-struct authcmd {
-  char *text;
-  int (*fun)();
-} authcmds[] = {
-  { "login",auth_login }
-,  { "plain",auth_plain }
-#ifdef CRAM_MD5
-, { "cram-md5",auth_cram }
-#endif
-, { 0,err_noauth }
-};
-
-void smtp_auth(arg)
-char *arg;
-{
-  int i;
-  char *cmd = arg;
-
-  if (!*childargs) { out("503 auth not available (#5.3.3)\r\n"); return; }
-  if (flagauth) { err_authd(); return; }
-  if (seenmail) { err_authmail(); return; }
-
-  if (!stralloc_copys(&user,"")) die_nomem();
-  if (!stralloc_copys(&pass,"")) die_nomem();
-  if (!stralloc_copys(&resp,"")) die_nomem();
-#ifdef CRAM_MD5
-  if (!stralloc_copys(&chal,"")) die_nomem();
-#endif
-
-  i = str_chr(cmd,' ');
-  arg = cmd + i;
-  while (*arg == ' ') ++arg;
-  cmd[i] = 0;
-
-  for (i = 0;authcmds[i].text;++i)
-    if (case_equals(authcmds[i].text,cmd)) break;
-
-  switch (authcmds[i].fun(arg)) {
-    case 0:
-      flagauth = 1;
-      protocol = "ESMTPA";
-      relayclient = "";
-      remoteinfo = user.s;
-      if (!env_unset("TCPREMOTEINFO")) die_read();
-      if (!env_put2("TCPREMOTEINFO",remoteinfo)) die_nomem();
-      if (!env_put2("RELAYCLIENT",relayclient)) die_nomem();
-      out("235 ok, go ahead (#2.0.0)\r\n");
-      break;
-    case 1:
-      err_authfail(user.s,authcmds[i].text);
-  }
-}
-
-
-/* this file is too long --------------------------------------------- GO ON */
-
 struct commands smtpcommands[] = {
   { "rcpt", smtp_rcpt, 0 }
 , { "mail", smtp_mail, 0 }
 , { "data", smtp_data, flush }
-, { "auth", smtp_auth, flush }
 , { "quit", smtp_quit, flush }
 , { "helo", smtp_helo, flush }
 , { "ehlo", smtp_ehlo, flush }
@@ -825,11 +408,8 @@ struct commands smtpcommands[] = {
 , { 0, err_unimpl, flush }
 } ;
 
-void main(argc,argv)
-int argc;
-char **argv;
+void main()
 {
-  childargs = argv + 1;
   sig_pipeignore();
   if (chdir(auto_qmail) == -1) die_control();
   setup();

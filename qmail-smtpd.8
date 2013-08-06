@@ -23,38 +23,7 @@ or
 header fields.
 
 .B qmail-smtpd
-supports ESMTP, including the 8BITMIME, DATA, PIPELINING, SIZE, and AUTH options.
-.B qmail-smtpd
-includes a \'MAIL FROM:\' parameter parser and obeys \'Auth\' and \'Size\' advertisements.
-.B qmail-smtpd
-can accept LOGIN, PLAIN, and CRAM-MD5 AUTH types. It invokes
-.IR checkprogram ,
-which reads on file descriptor 3 the username, a 0 byte, the password
-or CRAM-MD5 digest/response derived from the SMTP client,
-another 0 byte, a CRAM-MD5 challenge (if applicable to the AUTH type),
-and a final 0 byte.
-.I checkprogram
-invokes
-.I subprogram
-upon successful authentication, which should in turn return 0 to
-.BR qmail-smtpd ,
-effectively setting the environment variables $RELAYCLIENT and $TCPREMOTEINFO
-(any supplied value replaced with the authenticated username).
-.B qmail-smtpd
-will reject the authentication attempt if it receives a nonzero return
-value from
-.I checkprogram
-or
-.IR subprogram .
-
-Binding
-.B qmail-smtpd
-to the SUBMISSION port (\'587\') instead of the standard SMTP port 25 will advice
-.B qmail-smtpd 
-to require SMTP authention prior of accepting the \'MAIL FROM:\' command.
-A different port can be chosen, populating the environment variable 
-.IR SUBMISSIONPORT .
-
+supports ESMTP, including the 8BITMIME and PIPELINING options.
 .SH TRANSPARENCY
 .B qmail-smtpd
 converts the SMTP newline convention into the UNIX newline convention
@@ -68,26 +37,11 @@ accepts messages that contain long lines or non-ASCII characters,
 even though such messages violate the SMTP protocol.
 .SH "CONTROL FILES"
 .TP 5
-.I badhelo
-Unacceptable HELO/EHLO host names.
-.B qmail-smtpd
-will reject every recipient address for a message if
-the host name is listed in, 
-or matches a POSIX regular expression pattern listed in,
-.IR badhelo .
-If the 
-.B NOBADHELO 
-environment variable is set, then the contents of 
-.IR badhelo 
-will be ignored.
-For more information, please have a look at doc/README.qregex.
-.TP 5
 .I badmailfrom
 Unacceptable envelope sender addresses.
 .B qmail-smtpd
 will reject every recipient address for a message
-if the envelope sender address is listed in, or matches a POSIX regular expression
-pattern listed in,
+if the envelope sender address is listed in
 .IR badmailfrom .
 A line in
 .I badmailfrom
@@ -95,32 +49,6 @@ may be of the form
 .BR @\fIhost ,
 meaning every address at
 .IR host .
-For more information, please have a look at doc/README.qregex.
-.TP 5
-.I badmailfromnorelay
-Functions the same as the
-.IR badmailfrom
-control file but is read only if the 
-.B RELAYCLIENT 
-environment variable is not set.
-For more information, please have a look at doc/README.qregex.
-.TP 5
-.I badmailto
-Unacceptable envelope recipient addresses.
-.B qmail-smtpd
-will reject every recipient address for a message if the recipient address
-is listed in,
-or matches a POSIX regular expression pattern listed in,
-.IR badmailto .
-For more information, please have a look at doc/README.qregex.
-.TP 5
-.I badmailtonorelay
-Functions the same as the
-.IR badmailto
-control file but is read only if the
-.B RELAYCLIENT
-environment variable is not set.
-For more information, please have a look at doc/README.qregex.
 .TP 5
 .I databytes
 Maximum number of bytes allowed in a message,

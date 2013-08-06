@@ -1,496 +1,280 @@
-qmail (1.03-49.2+njl50.2) unstable; urgency=low
+netqmail (1.06-5.0njl~0njl.0) unstable; urgency=low
 
-  * Add qmail-remove-cname-check.patch to avoid useless and buggy CNAME lookups.
+  * Apply any still-relevant patches from old qmail-src
   * Build for Wheezy
 
- -- Nick Leverton <nick@leverton.org>  Wed, 10 Jul 2013 12:59:57 +0100
+ -- Nick Leverton <nick@leverton.org>  Tue, 06 Aug 2013 12:08:50 +0100
+
+netqmail (1.06-5) unstable; urgency=low
+
+  * debian/qmail.postrm: do not forcefully remove files in /etc/qmail/
+    (closes: #640593).
+  * debian/control: Standards-Version: 3.9.3.1.
+
+ -- Gerrit Pape <pape@smarden.org>  Wed, 11 Apr 2012 23:30:51 +0000
+
+netqmail (1.06-4) unstable; urgency=low
+
+  * debian/rules, debian/qmail.postinst, debian/qmail.postrm: don't
+    include named pipe queue/lock/trigger in the package, but create
+    in postinst and remove in postrm (policy 10.6).
+  * debian/control: Standards-Version: 3.8.4.0.
+  * debian/qmail.postinst: don't restart qmail-send, qmail-verify
+    services if the update-service program is not available.
+
+ -- Gerrit Pape <pape@smarden.org>  Thu, 18 Mar 2010 22:38:02 +0000
+
+netqmail (1.06-3) unstable; urgency=low
+
+  * debian/diff/0001-Add-realrcptto-functionality-...diff: remove;
+    obsolete.
+  * 0001-qmail-errmsg-logging.diff, 0002-qmail-verify.diff; new; add
+    qmail-verify functionality from Andrew Richards, an update to Paul
+    Jarc's realrcptto patch.
+  * debian/rules, debian/sbin: no longer build and install
+    qmail-smtpd-realrcptto, qmail-qmtpd-realrcptto programs.
+  * debian/sbin: add qmail-verify.
+  * debian/diff/0003-qmail-verify-optionally-check-aliases.cdb-...diff:
+    new: qmail-verify: optionally check aliases.cdb if fastforward is
+    used.
+  * debian/qmail.postinst: restart qmail-verify service on upgrade.
+  * debian/qmail.README.Debian: talk about the qmail-verify and errmsg
+    patches; typos.
+
+ -- Gerrit Pape <pape@smarden.org>  Mon, 08 Mar 2010 23:54:13 +0000
+
+netqmail (1.06-2) unstable; urgency=low
+
+  * debian/qmail-uids-gids.preinst: don't check and/or create qmail
+    users and groups in preinst to avoid pre-dependency on adduser.
+  * debian/qmail-uids-gids.postinst: configure: check and/or create
+    qmail users and groups.
+  * debian/rules: place boot/ into /usr/lib/qmail/, link back to
+    /var/lib/qmail/boot.
+  * debian/rules, debian/qmail.postinst: install config-fast program
+    into /usr/lib/qmail/bin/, instead of /var/lib/qmail/bin/.
+  * debian/control: package qmail: Suggests: fastforward, dot-forward.
+  * debian/control: Standards-Version: 3.8.0.1.
+
+ -- Gerrit Pape <pape@smarden.org>  Wed, 27 Aug 2008 20:38:04 +0000
+
+netqmail (1.06-1) unstable; urgency=low
+
+  * new upstream version netqmail-1.06.
+  * debian/control: change Source: to netqmail; no longer Depends:
+    fastforward, dot-forward; Depends: qmail-uids-gids instead of
+    Pre-Depends:.
+  * debian/rules: remove target configure:; use glibc by default instead
+    of dietlibc; no longer build upstream install, instcheck targets
+    separately; use proc instead of proc+df as default delivery.
+  * debian/gcc/, debian/install/: remove; obsolete.
+  * debian/control: no longer Build-Depends: dietlibc-dev.
+  * debian/rules: install into /var/lib/qmail/ instead of /var/qmail/;
+    subdirectory control/ is a symlink to /etc/qmail, and users/ a
+    symlink to /etc/qmail/users.
+  * debian/control: add qmail-uids-gids package (previously a separate
+    unofficial package).
+  * debian/qmail-uids-gids.README.Debian, qmail-uids-gids.postrm,
+    debian/qmail-uids-gids.preinst: new; from unofficial package,
+    slightly adapt; ensure that the proper qmail uids and gids are
+    installed.
+  * debian/rules: split install: target into install-arch:,
+    install-indep:; build qmail-uids-gids package in install-indep:.
+  * debian/rules: target binary-arch: run dpkg-shlibdeps; target clean:
+    remove debian/substvars.
+  * debian/control: Depends: ${shlibs:Depends}; Standards-Version:
+    3.7.3.0.
+  * debian/rules, debian/qmail.postinst, debian/qmail.postinst: the
+    config-fast program now resides in /var/lib/qmail/bin/ instead of
+    /etc/qmail/1st-config/.
+  * debian/rules: target clean: don't ignore error in make clean; drop
+    /usr/sbin/qmail-rc, drop symlink /etc/qmail/boot -> /var/qmail/boot.
+  * debian/qmail.conffiles: remove /usr/sbin/qmail-rc (obsolete).
+  * debian/control: update short and long descriptions; Build-Depends:
+    qmail-uids-gids (>> 1.06).
+  * debian/qmail.preinst, debian/qmail-uids-gids.preinst: upgrading qmail
+    from non-free and unofficial packages is not yet supported.
+  * debian/implicit: update to revision a09db2e.
+  * debian/qmail.docs: remove CHANGES, FILES, INSTALL, SYSDEPS, TARGETS,
+    debian/var-qmail.filelist.
+  * debian/var-qmail.filelist, debian/mkFilelist: remove; obsolete.
+  * debian/qmail.postinst: default directory for services in Debian is
+    /etc/services/; adapt paths; use the update-service program tocheck
+    whether the qmail-send service is registered.
+  * debian/qmail.postrm: adapt paths and version check.
+  * debian/qmail.preinst: remove check for proper qmail uids and gids.
+  * debian/qmail-uids-gids.preinst: uids and gids are now the same as in
+    the non-free package, group nofiles is replaced with nogroup; no
+    longer fixup uids, gids, upgrading is not yet supported.
+  * debian/rules: target build: set conf-qmail and conf-groups, restore
+    origs in target clean:.
+  * debian/control: Recommends: qmail-run (>= 2.0.0), Suggests:
+    qmail-tools.
+  * debian/copyright: rewrite copyright.
+  * debian/qmail-uids-gids.README.Debian, debian/qmail.README.Debian:
+    redo.
+  * debian/rules: install cdb.3, error.3, mbox.5 as *.3qmail, *.5qmail
+    respectively, to avoid conflict with the libcdb-dev, manpages-dev,
+    mutt packages.
+  * debian/qmail.preinst, debian/qmail.postrm: no longer divert mutt's
+    mbox.5 manpage.
+  * debian/rules: new target patch: apply patches from debian/diff/;
+    reverse apply in target clean:.
+  * debian/diff/0001-Add-realrcptto-functionality-...diff: new: Add
+    realrcptto functionality through qmail-?mtpd-realrcptto.
+  * debian/rules, debian/sbin: build, install qmail-smtpd-realrcptto,
+    qmail-qmtpd-realrcptto.
+  * debian/qmail-uids-gids.postrm, debian/qmail-uids-gids.preinst,
+    debian/qmail-uids-gids.README.Debian, debian/rules: use nofiles
+    system group with arbitrary gid.
+  * debian/control: package qmail-uids-gids: Depends: adduser.
+  * upload to Debian/main (closes: #457318).
 
-qmail (1.03-49.2+njl50.1) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Sun, 27 Apr 2008 15:31:23 +0000
 
-  * The following patches have been applied for Debian automagically:
-    netscape-progress - Fixes compatibility bug in POP3 daemon
-    pop3-supplementarygroups - Update to checkpasswd to allow multiple groups
-    qmailqueue - Allows use of external qmail-queue programs
-    qregex - Allows use of regular expressions for anti-relay / spam control
-    errno - Fixes glibc compatibility error
-    qmail_local - Fixes memory corruption in certain .qmail files
-  * Import qmail-authentication-0.7.1 patch from fehcom.de with adaptions
-    for Debian (todo: put it into debian/patches).
-  * Remove qmail-0.0.0.0 and replace by qmail-1.03-moreipme-0.6.patch.
-  * Add sendmail-flagf.patch from netqmail so that /usr/sbin/sendmail's
-    -f option sets the default From header field.
-  * Add qmail-1.03-fastremote-3.patch to improve efficiency on sending
-    large messages.
-  * Build for Lenny
+qmail (1.03-zarge2) sarge; urgency=low
 
- -- Nick Leverton <nick@leverton.org>  Sat, 22 Jan 2011 11:05:57 +0000
+  * build against sarge's dietlibc-dev (0.28-3).
 
-qmail (1.03-49.2) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Thu, 26 May 2005 18:50:17 +0000
 
-  * Non-maintainer upload
-  * Fix pending l10n issues. Debconf translations:
-    - French (Thomas Blein).  Closes: #596430
-    - Italian (Vincenzo Campanella).  Closes: #596497
-    - German (Martin Eberhard Schauer).  Closes: #596504
-    - Traditional Chinese (Kan-Ru Chen).  Closes: #596505
-    - Danish (Joe Hansen).  Closes: #596608
-    - Portuguese (Pedro Ribeiro).  Closes: #596614
-    - Swedish (Martin Bagge / brother).  Closes: #596697
-    - Czech (Michal Simunek).  Closes: #596800
-    - Spanish (Omar Campagne).  Closes: #597184
+qmail (1.03-zarge1) sarge; urgency=low
 
- -- Christian Perrier <bubulle@debian.org>  Wed, 06 Oct 2010 22:24:00 +0200
+  * debian/control: Build-Depends: groff-base, instead of groff.
+  * debian/qmail.postinst, debian/qmail.postrm, debian/qmail.preinst: minor
+    cleanup.
+  * debian/rules: minor cleanup.
+  * debian/implicit: update to revision 1.10.
 
-qmail (1.03-49) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Sun, 15 Aug 2004 16:36:49 +0000
 
-  * Fixed debian/rules regression (Closes: #584745)
+qmail (1.03-zarge0.4) sarge; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Wed, 09 Sep 2010 10:31:07 -0400
+  * debian/control: Pre-Depends: qmail-uids-gids (>> 1.0.0).
+  * debian/qmail.preinst: run /usr/share/qmail-uids-gids/fixup-nofiles-group.
 
-qmail (1.03-48) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Mon, 26 Apr 2004 17:13:04 +0000
 
-  * Removed ability to override existing installation (Closes: #505908)
-  * Setup po-debconf for translation
-  * Various lintian suggested tweaks
+qmail (1.03-zarge0.3) sarge; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Fri, 12 Mar 2010 18:54:30 -0500
+  * debian/control: no longer Build-Depends: dephelper; remove
+    Standards-Version.
+  * debian/rules: stop using debhelper, use implicit rules.
+  * debian/implicit: new; implicit Makefile rules.
+  * debian/README.Debian: rename to qmail.README.Debian; minor.
+  * debian/conffiles, debian/docs: rename to debian/qmail.*.
+  * debian/dirs, debian/links.in, debian/links.sendmail: remove; obsolete.
+  * debian/copyright: minor.
+  * debian/preinst, debian/postrm: rename to debian/qmail.*; cleanup.
+  * debian/postinst: rename to debian/qmail.postinst; cleanup; check for
+    hostname -f returning a hostname containing a dot (thx benoit delagarde).
 
-qmail (1.03-47) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Mon, 12 Apr 2004 13:43:46 +0000
 
-  * Removed additional chown commands from rules script (Closes: #485956)
+qmail (1.03-zarge0.2) sarge; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Sat, 13 Sep 2008 13:58:36 -0400
+  * use diet libc.
+  * debian/rules: new target configure: set up diet program as c compiler
+    wrapper; conditionally overwrite PATH to have diet program used as c
+    compiler wrapper; extra build dynamic install and instcheck programs
+    to perform install and check (supports fakeroot); minor cleanup.
+  * debian/gcc/gcc*: new; diet program as c compiler wrapper.
+  * debian/install/Makefile: new; build dynamically linked install and
+    instcheck programs.
+  * debian/control: Build-Depends: dietlibc-dev; no longer Depends:
+    ${shlibs:Depends}.
 
-qmail (1.03-46) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Wed, 12 Nov 2003 12:18:18 +0000
 
-  * Removed buggy inetd.conf code from preinst (Closes #491916)
-  * Removed prompts from prerm (Closes #491919)
-  * Removed typos from control file (Closes #459616)
-  * Added libc6-dev dependancy (Closes #478513)
-  * Removed link-sync patch (Closes #466447)
-  * Removed un-needed chown command from rules script (Closes #485956)
+qmail (1.03-woody1) woody; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Sun, 17 Aug 2008 15:26:55 -0400
+  * bump version for release.
 
-qmail (1.03-45) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Tue,  9 Jul 2002 11:05:19 +0200
 
-  * Updated prerm to remove dependancy on update-inetd (Closes #439702)
+qmail (1.03-woody0.7) woody; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Tue, 11 Dec 2007 15:32:58 -0600
+  * debian/postrm, debian/preinst: quoting variables.
+  * debian/preinst: change function declaration syntax (bashism?) to
+    support more /bin/sh shells, e.g. ash (thx Esben Haabendal Soerensen,
+    Joost van Baal).
 
-qmail (1.03-44) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Mon,  8 Apr 2002 11:49:41 +0200
 
-  * One minor fix in the control file for autobuild compatibility
+qmail (1.03-woody0.6) woody; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Fri, 19 Jan 2007 07:53:39 -0600
+  * woody package; new Standards-Version: 3.5.2.
+  * provides diversion of mutt's mbox.5.gz to mbox-mutt.5.gz.
+  * preinst: script cleanup.
+  * postrm: purge control/* and empty directories on purge.
+  * pre-depends on qmail-uids-gids.
+  * supports upgrade from qmail-1.03-20 built by qmail-src (woody);
+    anyway, it is recommended to purge qmail-1.03-20 first, use:
+    # dpkg --purge --force-depends qmail
+  * /var/qmail/rc -> /usr/sbin/qmail-rc marked as conffile.
+  * doc: improved.
 
-qmail (1.03-43) unstable; urgency=low
+ -- Gerrit Pape <pape@smarden.org>  Thu, 25 Oct 2001 15:48:40 +0200
 
-  * Updated to Debian Policy Standards-Version 3.7.2
-  * Fixed some non-essential errors in the control file
-  * Removed old 1.02 transition code and usr/doc cleanup (Closes: #406990)
+qmail (1.03-1) stable; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Sun, 31 Dec 2006 02:47:14 -0600
+  * 1st debian version, no other changes.
 
-qmail (1.03-42) unstable; urgency=low
+ -- Gerrit Pape <pape@innominate.com>  Thu,  1 Feb 2001 10:01:45 +0100
 
-  * Attempt #2 at fixing autobuild bug (Closes: #402331)
+qmail (1.03-0.7) unstable; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Thu, 21 Dec 2006 16:54:58 -0600
+  * build-depends and depends on qmail-uids-gids.
 
-qmail (1.03-41) unstable; urgency=low
+ -- Gerrit Pape <pape@innominate.com>  Mon, 18 Dec 2000 15:11:57 +0100
 
-  * Changed rules file to allow building -src on systems without qmail users
-    (Closes: #402331)
+qmail (1.03-0.6) unstable; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Sat, 16 Dec 2006 12:30:32 -0600
+  * removed man-pages also installed in section 9.
 
-qmail (1.03-40) unstable; urgency=low
+ -- Gerrit Pape <pape@innominate.de>  Fri, 17 Nov 2000 12:10:52 +0100
 
-  * Disabled all debconf notes per Christian Perrier <bubulle@debian.org>
-    Joey Hess <joeyh@debian.org>, and srivasta@debian.org (Closes: #388952)
+qmail (1.03-0.5) unstable; urgency=low
 
- -- Jon Marler <jmarler@debian.org>  Wed, 27 Sep 2006 13:40:16 -0500
+  * preinst: uids and gid are checked if they exist, if not they are
+    installed after 5sec timeout. They are also checked against the
+    uid/gis-Installation of the package qmail-src and may update the
+    entries interactively.
 
-qmail (1.03-39) unstable; urgency=low
+ -- Gerrit Pape <pape@innominate.de>  Mon, 29 May 2000 11:21:52 +0200
 
-  * Added debconf-2.0 dependancy option
+qmail (1.03-0.4) unstable; urgency=low
+                                                     	 
+  * /etc/mailname handling removed. config-fast is called with the output of
+    hostname -f as argument.
 
- -- Jon Marler <jmarler@debian.org>  Mon, 26 Sep 2005 13:29:40 -0500
+ -- Gerrit Pape <pape@innominate.de>  Wed,  3 May 2000 12:50:53 +0200
 
-qmail (1.03-38) unstable; urgency=high
+qmail (1.03-0.3) unstable; urgency=low
 
-  * Added ISO C patch taken from netqmil to fix 64-bit crashes (Closes: #309048)
+  * Documentation.
+  * this package does not longer provide/replace mail-transfer-agent,
+    qmail-run is doing that.
+  * config-fast is run in postinst, if qmail is unconfigured.
+  * binaries moved to /usr/{bin,sbin} and linked back to /var/qmail/bin/.
+  * /var/qmail/{control,boot,users} is accessible through /etc/qmail/.
 
- -- Jon Marler <jmarler@debian.org>  Sun, 15 May 2005 11:22:27 -0500
+ -- Gerrit Pape <pape@innominate.de>  Tue,  2 May 2000 09:29:33 +0200
 
-qmail (1.03-37) unstable; urgency=high
+qmail (1.03-0.2) unstable; urgency=low
 
-  * Updated qregex patch to 20040725 version
-  * Added Build-Depends line (Closes: #302677)
-  * Added pidfile settings to init file (Closes: #293484)
-  * Applied 0.0.0.0 local patch (Closes: #226753)
-  * Increased default ulimit to 16384 for x86_64 (Closes: #291437)
-  * Applied localtime patch (Closes: #272072)
-  * Fixed bug in qmail-procmail to allow arguments (Closes: #262906)
-  * Updated postrm to remove /etc/qmail/users on purge (Closes: #272806)
+  * using /etc/mailname for /var/qmail/control/defaulthost.
+  * prompt for 'mail name' if /etc/mailname does not exist.
+  * depend on fastforward, using of /etc/aliases is default.
 
- -- Jon Marler <jmarler@debian.org>  Thu,  5 May 2005 11:54:04 -0600
+ -- Gerrit Pape <pape@innominate.de>  Tue, 18 Apr 2000 19:27:22 +0200
 
-qmail (1.03-36) unstable; urgency=high
+qmail (1.03-0.1) unstable; urgency=low
 
-  * Fixed problem when building with apt-get source -b (Closes: #280677)
+  * Initial Release.
 
- -- Jon Marler <jmarler@debian.org>  Thu, 11 Nov 2004 13:03:39 -0600
+ -- Gerrit Pape <pape@innominate.de>  Thu, 13 Apr 2000 09:41:23 +0200
 
-qmail (1.03-35) unstable; urgency=high
-
-  * Fixed debconf errors (Closes: #272248, #272164, #272797, #272804)
-  * Added testing to release list
-
- -- Jon Marler <jmarler@debian.org>  Thu, 28 Oct 2004 11:15:19 -0500
-
-qmail (1.03-34) unstable; urgency=low
-
-  * Moved logcheck ignore file to docs directory (Closes: #271118)
-  * File is already included in logcheck-database which seems more logical
-
- -- Jon Marler <jmarler@debian.org>  Mon, 13 Sep 2004 06:50:39 -0500
-
-qmail (1.03-33) unstable; urgency=low
-
-  * Added -R -H to example POP3 server call (Closes: #269119)
-  * Added sample logcheck ignore files (Closes: #266143)
-  * Fixed hang bug in postinst (Closes: #266010)
-
- -- Jon Marler <jmarler@debian.org>  Tue, 31 Aug 2004 16:36:51 -0500
-
-qmail (1.03-32) unstable; urgency=low
-
-  * Initial debconf implementation
-    - Please file bug reports for questions i missed
-  * Removed reference to bmtpatch. (Closes: #246574)
-  * Leaving bmtpatch in -src pacakge as many users still use it
-  * Applied latest qregex patch (Closes: #246408)
-
- -- Jon Marler <jmarler@debian.org>  Tue, 13 Jul 2004 10:24:49 -0500
-
-qmail (1.03-31) unstable; urgency=low
-
-  * Added dependancy on perl-modules (Closes: #233015)
-
- -- Jon Marler <jmarler@debian.org>  Tue, 17 Feb 2004 13:03:08 -0600
-
-qmail (1.03-30) unstable; urgency=high
-
-  * Added patch from Scott Gifford to correct qmail-smtpd crash
-
- -- Jon Marler <jmarler@debian.org>  Tue, 20 Jan 2004 11:57:18 -0600
-
-qmail (1.03-29) unstable; urgency=low
-
-  * Added patch to resolve new glibc errors (Closes: #218564, #219872)
-  * Added patch to fix errno declaration errors (Closes: #219872)
-  * Remove strict barewords from preinst (Closes: #215152)
-  * Fixed minor type in build-qmail (Closes: #213415)
-  * Added patch to make qmail-local behave better (Closes: #95353)
-
- -- Jon Marler <jmarler@debian.org>  Thu, 13 Nov 2003 17:13:33 -0600
-
-qmail (1.03-28) unstable; urgency=low
-
-  * Fixed logging in init to handle rblsmtpd (Closes: #192116)
-  * Added ability to override qmail installation check (Closes: #187452)
-  * Changed groff dependancy to groff-base (Closes: #181021)
-  * Removed rm -rf /etc/qmail command in postrm (Closes: #179637)
-  * Added list of pre-applied patches in build script before binary build
-
- -- Jon Marler <jmarler@debian.org>  Thu, 25 Sep 2003 16:48:34 -0500
-
-qmail (1.03-27) unstable; urgency=low
-
-  * Added stat to usage list (Closes: #179831)
-
- -- Jon Marler <jmarler@debian.org>  Tue,  4 Feb 2003 16:16:41 -0600
-
-qmail (1.03-26) unstable; urgency=low
-
-  * Added -isp flag to dpkg-gencontrol (Closes: #179609)
-  * Removed emacs settings from changelog
-
- -- Jon Marler <jmarler@debian.org>  Mon,  3 Feb 2003 09:56:19 -0600
-
-qmail (1.03-25) unstable; urgency=low
-
-  * Applied patch from thunder7@xs4all.nl for libc6 (Closes: #174408)
-  * Fixed typo in postinst (Closes: #134011)
-  * Added warning in build script regarding tmpfs (Closes: #155024)
-  * Removed extra -f from postinst (Closes: #155573)
-  * Updated init.d script (Closes: #128638)
-
- -- Jon Marler <jmarler@debian.org>  Thu, 20 Jan 2003 02:56:56 -0600
-
-qmail (1.03-24) testing unstable; urgency=low
-
-  * Added libc6-dev back into the Depends line
-
- -- Jon Marler <jmarler@debian.org>  Mon, 18 Mar 2002 21:19:14 -0600
-
-qmail (1.03-23) testing unstable; urgency=low
-
-  * Fixed section of -src and binary .deb files (Closes: #125698)
-  * Updated checkpassword to .90 (Closes: #126686)
-
- -- Jon Marler <jmarler@debian.org>  Fri, 28 Dec 2001 11:28:34 -0600
-
-qmail (1.03-22) testing unstable; urgency=low
-
-  * Somehow the init.d patch didn't make it in.  It's in there now.
-
- -- Jon Marler <jmarler@debian.org>  Sun,  2 Dec 2001 02:56:22 -0600
-
-qmail (1.03-21) testing unstable; urgency=low
-
-  * Updated init to stop reverse DNS and ident lookups (Closes: #111934)
-  * Added QMAIL-QUEUE patch
-  * Added badmailto patch
-  * Updated package description to stop apt-get source confusion
-  * Added extra verbiage to help ucspi-tcp confusion (Closes: #106704)
-
- -- Jon Marler <jmarler@debian.org>  Sat,  1 Dec 2001 04:19:49 -0600
-
-qmail (1.03-20) testing unstable; urgency=low
-
-  * Updated dependancy to include groff. (Closes: #109003)
-  * Updated conflicts to prevent installing some binary deb packages
-  * Added patch from Alvaro Martinez Echevarria (Closes: #104504, #102692)
-
- -- Jon Marler <jmarler@debian.org>  Fri, 24 Aug 2001 10:49:51 -0500
-
-qmail (1.03-19) testing unstable; urgency=low
-
-  * Updated standards version
-  * Changed priority from optional to extra
-  * Fixed /usr/doc/ /usr/share/doc link
-
- -- Jon Marler <jmarler@debian.org>  Wed, 27 Jun 2001 18:26:07 -0500
-
-qmail (1.03-18) unstable; urgency=low
-
-  * Applied sync patch to make qmail for reiserfs/ext2 friendly
-
- -- Jon Marler <jmarler@debian.org>  Tue, 26 Jun 2001 13:44:32 -0500
-
-qmail (1.03-17) unstable; urgency=high
-
-  * Fixed gzip compression of manpages & docs (closes #76560)
-  * Fixed /var/qmail/bin symlink (closes #75736)
-  * Increased ulimit (closes #74956)
-
- -- Jon Marler <jmarler@debian.org>  Mon, 18 Dec 2000 15:26:26 -0600
-
-qmail (1.03-16) unstable; urgency=high
-
-  * Fixed dependancy problems in qmail-src. (Closes #67699)
-
- -- Jon Marler <jmarler@debian.org>  Tue, 25 Jul 2000 08:57:11 -0500
-
-qmail (1.03-15) unstable; urgency=high
-
-  * Moved documentation to /usr/share/doc (Closes #58682)
-  * Updated debian/rules to install the checkpassword manpage. (Closes #66975)
-  * Updated debian/rules to call install, rather then relying on the path. (Closes #67461)
-  * Updated build-qmail script with patch from Jeff Sheinberg <jeffsh@erols.com> that fixes non-absolute build paths (Closes #65190)
-
- -- Jon Marler <jmarler@debian.org>  Wed, 19 Jul 2000 14:00:00 -0500
-
-qmail (1.03-14) frozen unstable; urgency=high
-
-  * Fixed checkpasswd program.  Did not work if both shadow and non-shadow passwords are used.
-  * Installed patch that fixes the Netscape progress bar.
-
- -- Jon Marler <jmarler@debian.org>  Mon, 15 May 2000 22:28:38 -0500
-
-qmail (1.03-13) frozen unstable; urgency=high
-
-  * Fixed init script to work with new uid/gid scheme.
-  * Fixed pop3 daemon not starting.  Conflict with tcpserver/qmail-smtpd
-
- -- Jon Marler <jmarler@debian.org>  Tue,  9 May 2000 16:02:04 -0500
-
-qmail (1.03-12) frozen unstable; urgency=high
-
-  * Added warning about uid/gid potential conflicts between build and install.
-
- -- Jon Marler <jmarler@debian.org>  Tue,  22 Feb 2000 13:25:00 +0500
-
-qmail (1.03-11) frozen unstable; urgency=high
-
-  * Fixed more problems with new uid's.
-  * Fixed problem with init.d script.
-  * Fixed ulimit problem in init.d on some Sparc's and PPC's
-  * Fixed bug in changelog to upload to frozen AND unstable.
-
- -- Jon Marler <jmarler@debian.org>  Wed,   9 Feb 2000 13:25:00 +0500
-
-qmail (1.03-10) frozen; urgency=high
-
-  * Fixed problems with new uid's on new potato installs. (Closes #56588)
-
- -- Jon Marler <jmarler@debian.org>  Mon,  31 Jan 2000 13:25:00 +0500
-
-qmail (1.03-9) frozen; urgency=high
-
-  * Added new UID's & GID's to comply with new base-passwd package.  Only new installs are affected.
-
- -- Jon Marler <jmarler@debian.org>  Sat,  22 Jan 2000 13:25:00 +0500
-
-qmail (1.03-8) unstable; urgency=low
-
-  * Fixed even MORE bugs in preinst ... This time I have used code from the New Rider's Debian book (Closes #48720, #45203)
-  * Added a mail-transfer-agent provides line to work with other buggy packages (Closes #52623)
-
- -- Jon Marler <jmarler@debian.org>  Thu,  15 Dec 1999 13:25:00 +0500
-
-qmail (1.03-7) unstable; urgency=low
-
-  * Fixed yet another bug in preinst.  It's a little more carefull about moving files around.  (Closes #45203)
-  * Fixed bug in checkpassword that would only allow retrieval of files owned by users's primary group. (Closes #47424) Patch provided by russell@coker.com.au
-  * Fixed bug in init.d/qmail script.  Forgot to stop the pop-3 daemon.
-
- -- Jon Marler <jmarler@debian.org>  Thu,  14 Oct 1999 13:25:00 +0500
-
-qmail (1.03-6) unstable; urgency=high
-
-  * Fixed bug in preinst. (Closes #41211)
-  * Added dependancy to perl5.  Perl is used in the pre/post scripts.
-  
- -- Jon Marler <jmarler@debian.org>  Tue,  13 Jul 1999 17:13:00 +0500
-
-qmail (1.03-5) unstable; urgency=low
-
-  * New ucspi-tcp broke the init.d/qmail script.  Had to remove -S (closes: #40723, #40871, #40872)
-
- -- Jon Marler <jmarler@debian.org>  Tue,  6 Jul 1999 17:13:00 +0500
-
-qmail (1.03-4) unstable; urgency=high
-
-  * Fixed bug in debian/rules that on clean install, the control directory was not moved. (closes: #40381)
-  * Now features "out-of-the-box" pop-3 support.  Just un-comment a few lines in /etc/init.d/qmail (Courtesy of Varga Robert <robi@politext.hu>)
-  * Fixed bug where /var/lib/qmail/alias was not being created. (Thanks again Varga)
-
- -- Jon Marler <jmarler@debian.org>  Mon,  28 Jun 1999 17:13:00 +0500
-
-qmail (1.03-3) unstable; urgency=high
-
-  * Fixed bug in debian/rules that attempted to install into /usr/doc/qmail and /usr/doc/qmail/examples (closes: #39857, #39890)
-
- -- Jon Marler <jmarler@debian.org>  Mon,  21 Jun 1999 13:00:00 +0100
-
-qmail (1.03-2) unstable; urgency=low
-
-  * Changed dependency on gcc to gcc or egcc (closes: #22053)
-  * Fixed minor typo in documentation regarding where alias was moved.
-  * Got permission from Ivan Kohler <ivan@voicenet.com> to distribure mbox2maildir script which is not part of qmail (closes: #34375)
-  * All documentation normally located in /var/qmail/doc has been moved to /usr/doc/qmail.  A symlink from /var/qmail/doc to /usr/doc/qmail is in its place. (closes: #39372)
-
- -- Jon Marler <jmarler@debian.org>  Fri,  18 Jun 1999 12:33:00 +0100
-
-qmail (1.03-1) unstable; urgency=low
-
-  * New upstream release (closes: #30378)
-  * New maintainer
-  * Updated qmailconfig to show "/etc/qmail/control/me" instead of "control/me"
-    (closes: #12311)
-  * Moved /var/qmail/users to /etc/qmail, and /var/qmail/alias to /var/lib/qmail/alias (closes: #11862)
-  * Added /usr/doc/examples/ip-up.d example ppp script (closes: #19131)
-    Used example written by Dick Broadway <dickcdm@gte.net>
-  * Checkpassword is now compiled and installed in /usr/bin (closes: #28394, #9760) 
-  * Modified /etc/init.d/qmail to add --user arguments to start-stop-deamon
-    when starting and stopping qmail-send and tcpserver. (closes: #25600)
-    Uses suggestions from Tommi Virtanen <tv@debian.org>
-  * Modified /etc/init.d/qmail to be a bash script (closes: #31994)
-  * Applied patch to dns.c to allow e-mail to deliver correctly to systems where
-    their DNS size is greater > 512.  Fixes "CNAME Lookup Failure" error when
-    delivering mail to aol.com
-
- -- Jon Marler <jmarler@debian.org>  Sat,  29 May 1999 12:33:00 +0100
-
-qmail (1.02-1) unstable; urgency=low
-
-  * New upstream release
-  * fix ulimit problem in init.d script
-
- -- Philip Hands <phil@hands.com>  Thu,  7 May 1998 08:43:19 +0100
-
-qmail (1.01-7) unstable; urgency=low
-
-  * include INSTALL in docs.
-  * update rules, to use a binary-src target for the -src package
-  * check that the builder's machine has debian standard [ug]ids for qmail
-  * fix default cleanup response in build-PACKAGE
-
- -- Philip Hands <phil@hands.com>  Tue,  7 Apr 1998 00:17:47 +0100
-
-qmail (1.01-6) non-free; urgency=low
-
-  * tidy up debian/rules (use binary-indep for binary independant bits :-)
-
- -- Philip Hands <phil@hands.com>  Thu, 19 Mar 1998 18:04:15 +0000
-
-qmail (1.01-5) non-free; urgency=low
-
-  * make sure it's in non-free.
-    Don't know how, but I managed to change it to unstable without
-    noticing :-(
-  
- -- Philip Hands <phil@hands.com>  Tue, 24 Feb 1998 09:05:42 +0000
-
-qmail (1.01-4) non-free; urgency=low
-
-  * add newaliases (closes: #13759)
-  * fix permissions on users/assign
-
- -- Philip Hands <phil@hands.com>  Fri, 13 Feb 1998 09:46:47 +0000
-
-qmail (1.01-3) non-free; urgency=low
-
-  * add /etc/hosts.allow lines so we can have stderr `twisted' to syslog
-  * add a checkpassword, for use with qmail-popup
-  * actually include qmail-procmail script (closes: #17767, #14315)
-  * include eliminate-dups
-  * add default /var/qmail/users/assign
-
- -- Philip Hands <phil@hands.com>  Wed,  4 Feb 1998 12:59:39 +0000
-
-qmail (1.01-2) non-free; urgency=low
-
-  * new maintainer
-  * qmail-1.01.orig.tar.gz now really is pristine source ;-)
-  * revert to unpatched source, and get dot-locking by use of procmail
-  * add creation of qmail-src
-
- -- Philip Hands <phil@hands.com>  Fri, 31 Oct 1997 21:13:40 +0000
-
-qmail (1.01-1) experimental; urgency=low
-
-  * New upstream release.
-  * Gave in and added /usr/lib/sendmail symlink (fixes bugs 10283 and 11347)
-  * Compiled with libc6.
-  * qmail-1.01.orig.tar.gz is now pristine source, thanks to dpkg 1.4.0.19
-
- -- Christian Hudon <chrish@debian.org>  Fri,  8 Aug 1997 22:22:24 -0400
-
-qmail (1.00-2) experimental; urgency=low
-
-  * Fixed error in sed expression of qmailconfig (Thanks to Philip Hands)
-  * Made '/etc/init.d/qmail stop' output look prettier.
-
- -- Christian Hudon <chrish@debian.org>  Sun, 13 Apr 1997 19:12:59 -0400
-
-qmail (1.00-1) experimental; urgency=low
-
-  * Initial release.
-
- -- Christian Hudon <chrish@debian.org>  Wed, 26 Mar 1997 00:24:38 -0500
-
+Local variables:
+mode: debian-changelog
+End:

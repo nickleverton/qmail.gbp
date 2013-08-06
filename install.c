@@ -33,9 +33,7 @@ int uid;
 int gid;
 int mode;
 {
-    if (fchdir(fdsourcedir) == -1)
-	        strerr_die2sys(111,FATAL,"unable to switch back to source directory: ");
-    if (chdir(home) == -1)
+  if (chdir(home) == -1)
     strerr_die4sys(111,FATAL,"unable to switch to ",home,": ");
   if (mkdir(subdir,0700) == -1)
     if (errno != error_exist)
@@ -53,8 +51,6 @@ int uid;
 int gid;
 int mode;
 {
-  if (fchdir(fdsourcedir) == -1)
-	      strerr_die2sys(111,FATAL,"unable to switch back to source directory: ");
   if (chdir(home) == -1)
     strerr_die4sys(111,FATAL,"unable to switch to ",home,": ");
   if (fifo_make(fifo,0700) == -1)
@@ -131,8 +127,6 @@ int mode;
 {
   int fdout;
 
-  if (fchdir(fdsourcedir) == -1)
-	      strerr_die2sys(111,FATAL,"unable to switch back to source directory: ");
   if (chdir(home) == -1)
     strerr_die4sys(111,FATAL,"unable to switch to ",home,": ");
 
