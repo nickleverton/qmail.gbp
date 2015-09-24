@@ -1,3 +1,9 @@
+netqmail (1.06-5.0njl~0njl.1) unstable; urgency=low
+
+  * Add Erwin Hoffman's qmail-authenticate patch, updated for debqmail.
+
+ -- Nick Leverton <nick@leverton.org>  Thu, 24 Sep 2015 10:38:20 +0100
+
 netqmail (1.06-5.0njl~0njl.0) unstable; urgency=low
 
   * Apply any still-relevant patches from old qmail-src

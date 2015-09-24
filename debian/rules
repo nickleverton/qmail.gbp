@@ -15,6 +15,9 @@ patch-stamp:
 	for i in `ls -1 debian/patches/*.patch || :`; do \
 	  patch -p1 <$$i || exit 1; \
 	done
+	for i in `ls -1 debian/patches.njl/*.patch || :`; do \
+	  patch -p1 <$$i || exit 1; \
+	done
 	touch patch-stamp
 
 build: deb-checkdir build-stamp
@@ -28,6 +31,7 @@ clean: deb-checkdir deb-checkuid
 	$(MAKE) clean
 	test ! -r conf-qmail'{orig}' || mv -f conf-qmail'{orig}' conf-qmail
 	if test -e patch-stamp ; then \
+	  for i in `ls -1r debian/patches.njl/*.patch || :`; do patch -p1 -R <$$i; done ; \
 	  for i in `ls -1r debian/patches/*.patch || :`; do patch -p1 -R <$$i; done ; \
 	  for i in `ls -1r debian/diff/*.diff || :`; do patch -p1 -R <$$i; done ; \
 	fi
