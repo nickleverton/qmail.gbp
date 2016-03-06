@@ -1212,16 +1212,3 @@ Index: netqmail-1.06-5.0njl~0njl.1/qmail-smtpd.c
    sig_pipeignore();
    /* esetfd(2); Errors default to FD2 (stderr), change here if needed */
    if (chdir(auto_qmail) == -1) die_control();
-Index: netqmail-1.06-5.0njl~0njl.1/qmail-smtpd.c.orig
-===================================================================
---- netqmail-1.06-5.0njl~0njl.1.orig/qmail-smtpd.c.orig
-+++ netqmail-1.06-5.0njl~0njl.1/qmail-smtpd.c.orig
-@@ -435,7 +435,7 @@ int *hops;
-   char ch;
-   int state;
-   int flaginheader;
--  int pos; /* number of bytes since most recent \n, if fih */
-+  unsigned int pos; /* number of bytes since most recent \n, if fih */
-   int flagmaybex; /* 1 if this line might match RECEIVED, if fih */
-   int flagmaybey; /* 1 if this line might match \r\n, if fih */
-   int flagmaybez; /* 1 if this line might match DELIVERED, if fih */

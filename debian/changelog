@@ -1,3 +1,12 @@
+netqmail (1.06-5.0njl~0njl.2) unstable; urgency=low
+
+  * Add Frederik Vermeulen's qmail-tls patch for netqmail and port it.
+  * Remove ~0njl.1's patching of qmail-smtpd.c.orig which FTBFS in clean dir.
+  * Add a quilt series file to help further with adding/refreshing patches
+    (not used for build as yet).
+
+ -- Nick Leverton <nick@leverton.org>  Sun, 06 Mar 2016 00:49:43 +0000
+
 netqmail (1.06-5.0njl~0njl.1) unstable; urgency=low
 
   * Add Erwin Hoffman's qmail-authenticate patch, updated for debqmail.

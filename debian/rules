@@ -28,6 +28,7 @@ build-stamp: patch-stamp
 	touch build-stamp
 
 clean: deb-checkdir deb-checkuid
+	test ! -d .pc	# just in case
 	$(MAKE) clean
 	test ! -r conf-qmail'{orig}' || mv -f conf-qmail'{orig}' conf-qmail
 	if test -e patch-stamp ; then \
@@ -38,6 +39,7 @@ clean: deb-checkdir deb-checkuid
 	rm -f build-stamp patch-stamp
 	rm -rf '$(DIR)' '$(DIR)'-uids-gids
 	rm -f debian/files debian/substvars changelog
+	rm -f tags # just in case
 
 install: install-arch install-indep
 install-arch: deb-checkdir deb-checkuid build-stamp
