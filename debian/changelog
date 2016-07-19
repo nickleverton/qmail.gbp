@@ -1,3 +1,10 @@
+netqmail (1.06-5.0njl~0njl.3) UNRELEASED; urgency=medium
+
+  * Update qmail-smtpd and qmail-remote in netqmail-1.06-tls-20151215.patch
+    to use SSL_CTX_use_PrivateKey_file not RSAPrivateKey_file.
+
+ -- Nick Leverton <nick@leverton.org>  Tue, 19 Jul 2016 23:38:00 +0100
+
 netqmail (1.06-5.0njl~0njl.2) unstable; urgency=low
 
   * Add Frederik Vermeulen's qmail-tls patch for netqmail and port it.

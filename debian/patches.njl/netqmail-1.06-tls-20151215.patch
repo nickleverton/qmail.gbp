@@ -210,10 +210,10 @@ Bug reports: mailto:<qmail-tls akrul inoa.net>
 
 
 
-Index: netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.c
+Index: netqmail-1.06-5.0njl~0njl.3/qmail-smtpd.c
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/qmail-smtpd.c	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.c	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/qmail-smtpd.c	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/qmail-smtpd.c	2016-07-22 02:02:59.000000000 +0100
 @@ -52,9 +52,25 @@
  int rcptcount;
  stralloc addr = {0}; /* will be 0-terminated, if addrparse returns 1 */
@@ -519,8 +519,8 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.c
 +  if (!myssl) { tls_err("unable to initialize ssl"); return; }
 +
 +  /* this will also check whether public and private keys match */
-+  if (!SSL_use_RSAPrivateKey_file(myssl, SERVERCERT, SSL_FILETYPE_PEM))
-+    { SSL_free(myssl); tls_err("no valid RSA private key"); return; }
++  if (!SSL_use_PrivateKey_file(myssl, SERVERCERT, SSL_FILETYPE_PEM))
++    { SSL_free(myssl); tls_err("no valid private key"); return; }
 +
 +  ciphers = env_get("TLSCIPHERS");
 +  if (!ciphers) {
@@ -580,10 +580,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.c
  , { "noop", err_noop, flush }
  , { "vrfy", err_vrfy, flush }
  , { 0, err_unimpl, flush }
-Index: netqmail-1.06-5.0njl~0njl.2/qmail-remote.c
+Index: netqmail-1.06-5.0njl~0njl.3/qmail-remote.c
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/qmail-remote.c	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/qmail-remote.c	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/qmail-remote.c	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/qmail-remote.c	2016-07-21 14:18:40.000000000 +0100
 @@ -59,6 +59,17 @@
  
  struct ip_address partner;
@@ -840,7 +840,7 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-remote.c
 +  /* let the other side complain if it needs a cert and we don't have one */
 +# define CLIENTCERT "control/clientcert.pem"
 +  if (SSL_CTX_use_certificate_chain_file(ctx, CLIENTCERT))
-+    SSL_CTX_use_RSAPrivateKey_file(ctx, CLIENTCERT, SSL_FILETYPE_PEM);
++    SSL_CTX_use_PrivateKey_file(ctx, CLIENTCERT, SSL_FILETYPE_PEM);
 +# undef CLIENTCERT
 +
 +  myssl = SSL_new(ctx);
@@ -1020,10 +1020,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-remote.c
        smtp(); /* does not return */
      }
      tcpto_err(&ip.ix[i].ip,errno == error_timeout);
-Index: netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.8
+Index: netqmail-1.06-5.0njl~0njl.3/qmail-smtpd.8
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/qmail-smtpd.8	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.8	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/qmail-smtpd.8	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/qmail-smtpd.8	2016-07-21 14:18:40.000000000 +0100
 @@ -14,6 +14,15 @@
  see
  .BR tcp-environ(5) .
@@ -1124,10 +1124,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-smtpd.8
  .SH "RECIPIENT VERIFICATION"
  Recipient verification is enabled with the
  .B VERIFY
-Index: netqmail-1.06-5.0njl~0njl.2/qmail-remote.8
+Index: netqmail-1.06-5.0njl~0njl.3/qmail-remote.8
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/qmail-remote.8	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/qmail-remote.8	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/qmail-remote.8	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/qmail-remote.8	2016-07-21 14:18:40.000000000 +0100
 @@ -227,6 +227,10 @@
     :mailrelay.example.com:587|e=mc2|testpass
  .EE
@@ -1199,10 +1199,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-remote.8
  .SH "SEE ALSO"
  addresses(5),
  envelopes(5),
-Index: netqmail-1.06-5.0njl~0njl.2/qmail-control.9
+Index: netqmail-1.06-5.0njl~0njl.3/qmail-control.9
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/qmail-control.9	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/qmail-control.9	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/qmail-control.9	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/qmail-control.9	2016-07-21 14:18:40.000000000 +0100
 @@ -44,11 +44,14 @@
  .I badmailfrom	\fR(none)	\fRqmail-smtpd
  .I bouncefrom	\fRMAILER-DAEMON	\fRqmail-send
@@ -1236,10 +1236,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-control.9
  .I virtualdomains	\fR(none)	\fRqmail-send
  .fi
  .RE
-Index: netqmail-1.06-5.0njl~0njl.2/dns.c
+Index: netqmail-1.06-5.0njl~0njl.3/dns.c
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/dns.c	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/dns.c	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/dns.c	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/dns.c	2016-07-21 14:18:40.000000000 +0100
 @@ -242,12 +242,11 @@
  int pref;
  {
@@ -1289,10 +1289,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/dns.c
     if (!glue.s[ip_scan(glue.s,&ix.ip)] || !glue.s[ip_scanbracket(glue.s,&ix.ip)])
      {
       if (!ipalloc_append(ia,&ix)) return DNS_MEM;
-Index: netqmail-1.06-5.0njl~0njl.2/hier.c
+Index: netqmail-1.06-5.0njl~0njl.3/hier.c
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/hier.c	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/hier.c	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/hier.c	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/hier.c	2016-07-21 14:18:40.000000000 +0100
 @@ -144,6 +144,9 @@
    c(auto_qmail,"bin","qail",auto_uido,auto_gidq,0755);
    c(auto_qmail,"bin","elq",auto_uido,auto_gidq,0755);
@@ -1303,10 +1303,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/hier.c
  
    c(auto_qmail,"man/man5","addresses.5",auto_uido,auto_gidq,0644);
    c(auto_qmail,"man/cat5","addresses.0",auto_uido,auto_gidq,0644);
-Index: netqmail-1.06-5.0njl~0njl.2/ipalloc.h
+Index: netqmail-1.06-5.0njl~0njl.3/ipalloc.h
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/ipalloc.h	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/ipalloc.h	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/ipalloc.h	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/ipalloc.h	2016-07-21 14:18:40.000000000 +0100
 @@ -3,7 +3,15 @@
  
  #include "ip.h"
@@ -1323,10 +1323,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/ipalloc.h
  
  #include "gen_alloc.h"
  
-Index: netqmail-1.06-5.0njl~0njl.2/tls.c
+Index: netqmail-1.06-5.0njl~0njl.3/tls.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/tls.c	2016-03-06 23:36:06.000000000 +0000
++++ netqmail-1.06-5.0njl~0njl.3/tls.c	2016-07-21 14:18:40.000000000 +0100
 @@ -0,0 +1,25 @@
 +#include "exit.h"
 +#include "error.h"
@@ -1353,10 +1353,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/tls.c
 +  if (!errno) return 0;
 +  return (errno == error_timeout) ? "timed out" : error_str(errno);
 +}
-Index: netqmail-1.06-5.0njl~0njl.2/tls.h
+Index: netqmail-1.06-5.0njl~0njl.3/tls.h
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/tls.h	2016-03-06 23:36:06.000000000 +0000
++++ netqmail-1.06-5.0njl~0njl.3/tls.h	2016-07-21 14:18:40.000000000 +0100
 @@ -0,0 +1,16 @@
 +#ifndef TLS_H
 +#define TLS_H
@@ -1374,10 +1374,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/tls.h
 +const char *ssl_error_str();
 +
 +#endif
-Index: netqmail-1.06-5.0njl~0njl.2/ssl_timeoutio.c
+Index: netqmail-1.06-5.0njl~0njl.3/ssl_timeoutio.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/ssl_timeoutio.c	2016-03-06 23:36:06.000000000 +0000
++++ netqmail-1.06-5.0njl~0njl.3/ssl_timeoutio.c	2016-07-21 14:18:40.000000000 +0100
 @@ -0,0 +1,95 @@
 +#include "select.h"
 +#include "error.h"
@@ -1474,10 +1474,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/ssl_timeoutio.c
 +  if (!buf) return 0;
 +  return ssl_timeoutio(SSL_write, t, rfd, wfd, ssl, buf, len);
 +}
-Index: netqmail-1.06-5.0njl~0njl.2/ssl_timeoutio.h
+Index: netqmail-1.06-5.0njl~0njl.3/ssl_timeoutio.h
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/ssl_timeoutio.h	2016-03-06 23:36:06.000000000 +0000
++++ netqmail-1.06-5.0njl~0njl.3/ssl_timeoutio.h	2016-07-21 14:18:40.000000000 +0100
 @@ -0,0 +1,21 @@
 +#ifndef SSL_TIMEOUTIO_H
 +#define SSL_TIMEOUTIO_H
@@ -1500,10 +1500,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/ssl_timeoutio.h
 +  int (*fun)(), int t, int rfd, int wfd, SSL *ssl, char *buf, int len);
 +
 +#endif
-Index: netqmail-1.06-5.0njl~0njl.2/TARGETS
+Index: netqmail-1.06-5.0njl~0njl.3/TARGETS
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/TARGETS	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/TARGETS	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/TARGETS	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/TARGETS	2016-07-21 14:18:40.000000000 +0100
 @@ -170,6 +170,8 @@
  constmap.o
  timeoutread.o
@@ -1526,10 +1526,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/TARGETS
  setup
  check
 +update_tmprsadh
-Index: netqmail-1.06-5.0njl~0njl.2/Makefile-cert.mk
+Index: netqmail-1.06-5.0njl~0njl.3/Makefile-cert.mk
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/Makefile-cert.mk	2016-03-06 23:36:06.000000000 +0000
++++ netqmail-1.06-5.0njl~0njl.3/Makefile-cert.mk	2016-07-21 14:18:40.000000000 +0100
 @@ -0,0 +1,21 @@
 +cert-req: req.pem
 +cert cert-req: QMAIL/control/clientcert.pem
@@ -1552,19 +1552,19 @@ Index: netqmail-1.06-5.0njl~0njl.2/Makefile-cert.mk
 +	@echo
 +	@echo "Send req.pem to your CA to obtain signed_req.pem, and do:"
 +	@echo "cat signed_req.pem >> QMAIL/control/servercert.pem"
-Index: netqmail-1.06-5.0njl~0njl.2/conf-cc
+Index: netqmail-1.06-5.0njl~0njl.3/conf-cc
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/conf-cc	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/conf-cc	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/conf-cc	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/conf-cc	2016-07-21 14:18:40.000000000 +0100
 @@ -1,3 +1,3 @@
 -cc -O2
-+cc -O2 -DTLS=20151215
++cc -O2 -DTLS=20151215 -DDEBUG
  
  This will be used to compile .c files.
-Index: netqmail-1.06-5.0njl~0njl.2/Makefile
+Index: netqmail-1.06-5.0njl~0njl.3/Makefile
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/Makefile	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/Makefile	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/Makefile	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/Makefile	2016-07-21 14:18:40.000000000 +0100
 @@ -130,7 +130,16 @@
  
  auto_usera.c: \
@@ -1685,10 +1685,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/Makefile
 +update_tmprsadh
 +	echo "Creating new temporary RSA and DH parameters"
 +	./update_tmprsadh
-Index: netqmail-1.06-5.0njl~0njl.2/update_tmprsadh.sh
+Index: netqmail-1.06-5.0njl~0njl.3/update_tmprsadh.sh
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/update_tmprsadh.sh	2016-03-06 23:36:06.000000000 +0000
++++ netqmail-1.06-5.0njl~0njl.3/update_tmprsadh.sh	2016-07-21 14:18:40.000000000 +0100
 @@ -0,0 +1,19 @@
 +#!/bin/sh
 +
@@ -1709,10 +1709,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/update_tmprsadh.sh
 +chmod 600 QMAIL/control/dh2048.new &&
 +chown UGQMAILD QMAIL/control/dh2048.new &&
 +mv -f QMAIL/control/dh2048.new QMAIL/control/dh2048.pem
-Index: netqmail-1.06-5.0njl~0njl.2/prot.c
+Index: netqmail-1.06-5.0njl~0njl.3/prot.c
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/prot.c	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/prot.c	2016-03-06 23:41:42.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/prot.c	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/prot.c	2016-07-21 14:18:40.000000000 +0100
 @@ -19,3 +19,11 @@
  {
    return setuid(uid);
@@ -1725,10 +1725,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/prot.c
 +    rc = prot_uid(uid);
 +  return rc;
 +}
-Index: netqmail-1.06-5.0njl~0njl.2/qmail-start.c
+Index: netqmail-1.06-5.0njl~0njl.3/qmail-start.c
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/qmail-start.c	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/qmail-start.c	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/qmail-start.c	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/qmail-start.c	2016-07-21 14:18:40.000000000 +0100
 @@ -3,6 +3,7 @@
  #include "exit.h"
  #include "fork.h"
@@ -1746,10 +1746,10 @@ Index: netqmail-1.06-5.0njl~0njl.2/qmail-start.c
        if (fd_copy(0,pi3[0]) == -1) die();
        if (fd_copy(1,pi4[1]) == -1) die();
        close23456();
-Index: netqmail-1.06-5.0njl~0njl.2/auto_usera.h
+Index: netqmail-1.06-5.0njl~0njl.3/auto_usera.h
 ===================================================================
---- netqmail-1.06-5.0njl~0njl.2.orig/auto_usera.h	2016-03-06 23:36:06.000000000 +0000
-+++ netqmail-1.06-5.0njl~0njl.2/auto_usera.h	2016-03-06 23:36:06.000000000 +0000
+--- netqmail-1.06-5.0njl~0njl.3.orig/auto_usera.h	2016-07-21 14:18:40.000000000 +0100
++++ netqmail-1.06-5.0njl~0njl.3/auto_usera.h	2016-07-21 14:18:40.000000000 +0100
 @@ -2,5 +2,12 @@
  #define AUTO_USERA_H
  
