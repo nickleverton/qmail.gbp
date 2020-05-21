@@ -1,3 +1,33 @@
+netqmail (1.06-6.2~deb9u1) stretch-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Rebuild for stretch-security
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Thu, 21 May 2020 14:06:19 +0200
+
+netqmail (1.06-6.2) unstable; urgency=high
+
+  * Address CVE-2005-1513, CVE-2005-1514, CVE-2005-1515, CVE-2020-3811 and
+    CVE-2020-3812 (Closes: #961060)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Wed, 20 May 2020 22:23:21 +0200
+
+netqmail (1.06-6.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * [fdc8794a] Setup Gitlab continous integration
+  * [73e52807] Fix quotation in postinst (Closes: #866038)
+  * [2fc47776] Make package piupart-clean (Closes: #672155)
+
+ -- Dmitry Bogatov <KAction@debian.org>  Mon, 15 Jul 2019 19:54:50 +0000
+
+netqmail (1.06-6) unstable; urgency=low
+
+  * debian/rules: do not FTBFS with dpkg-buildpackage -A (thx Santiago
+    Vila; closes: #831963).
+
+ -- Gerrit Pape <pape@smarden.org>  Wed, 21 Sep 2016 08:58:41 +0000
+
 netqmail (1.06-5) unstable; urgency=low
 
   * debian/qmail.postrm: do not forcefully remove files in /etc/qmail/
