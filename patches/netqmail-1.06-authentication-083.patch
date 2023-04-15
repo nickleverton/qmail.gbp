@@ -8,15 +8,15 @@ Index: netqmail-1.06-5.0njl~0njl.1/Makefile
  
 +base64.o: \
 +compile base64.c base64.h stralloc.h substdio.h str.h
-+	./compile base64.c -o $@
++	./compile base64.c
 +
 +md5c.o : \
 +compile md5c.c md5.h
-+	./compile md5c.c -o $@
++	./compile md5c.c
 +
 +hmac_md5.o : \
 +compile hmac_md5.c hmac_md5.h global.h
-+	./compile hmac_md5.c -o $@
++	./compile hmac_md5.c
 +
  binm1: \
  binm1.sh conf-qmail

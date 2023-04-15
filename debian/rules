@@ -18,8 +18,15 @@ patch-stamp:
 	for i in `ls -1 debian/patches.njl/*.patch || :`; do \
 	  patch -p1 <$$i || exit 1; \
 	done
+	ln -s debian/src/* .
 	touch patch-stamp
+ifeq ($(DEBEMAIL),<salsa-pipeline@debian.org>)
+	echo 'int main () { return 0; }' | tee chkshsgr.c
+endif
 
+
+build-arch: build
+build-indep: build
 build: deb-checkdir build-stamp
 build-stamp: patch-stamp
 	test -r conf-qmail'{orig}' || cp conf-qmail conf-qmail'{orig}'
@@ -28,7 +35,8 @@ build-stamp: patch-stamp
 	touch build-stamp
 
 clean: deb-checkdir deb-checkuid
-	test ! -d .pc	# just in case
+	quilt pop -a || [ $$? = 2 ]	# exit 0 or 2 is OK
+	rm -rf .pc
 	$(MAKE) clean
 	test ! -r conf-qmail'{orig}' || mv -f conf-qmail'{orig}' conf-qmail
 	if test -e patch-stamp ; then \
@@ -36,6 +44,7 @@ clean: deb-checkdir deb-checkuid
 	  for i in `ls -1r debian/patches/*.patch || :`; do patch -p1 -R <$$i; done ; \
 	  for i in `ls -1r debian/diff/*.diff || :`; do patch -p1 -R <$$i; done ; \
 	fi
+	rm -f `ls debian/src`
 	rm -f build-stamp patch-stamp
 	rm -rf '$(DIR)' '$(DIR)'-uids-gids
 	rm -f debian/files debian/substvars changelog
@@ -120,6 +129,6 @@ binary-indep: install-indep qmail-uids-gids.deb
 	dpkg-gencontrol -isp -pqmail-uids-gids -P'$(DIR)'-uids-gids
 	dpkg -b '$(DIR)'-uids-gids ..
 
-.PHONY: patch build clean install binary-indep binary-arch binary
+.PHONY: patch build build-arch build-indep clean install binary-indep binary-arch binary
 
 include debian/implicit

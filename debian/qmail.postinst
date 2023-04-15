@@ -2,7 +2,7 @@
 set -e
 
 stopinst() {
-  cat <<-\EOT >&2
+  cat <<-EOT >&2
 	
 	The hostname -f command returned: $1
 	

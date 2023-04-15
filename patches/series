@@ -1,0 +1,10 @@
+0001-qmail-errmsg-logging.diff
+0002-qmail-verify.diff
+0003-qmail-verify-optionally-check-aliases.cdb-if-fastforw.diff
+0004-Remote-Code-Execution-in-qmail.diff
+qmail-1.03-fastremote-3.patch
+qmail-link-sync.patch
+qmail-remove-cname-check.patch
+qmail-smtpd-usint.patch
+netqmail-1.06-authentication-083.patch
+netqmail-1.06-tls-20151215.patch

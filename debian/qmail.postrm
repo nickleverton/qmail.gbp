@@ -8,5 +8,11 @@ test ! -d /var/lib/qmail || rmdir /var/lib/qmail || :
 
 test "$1" = 'purge' || exit 0
 rm -f /etc/qmail/users/*
+rm -f /etc/qmail/defaultdomain
+rm -f /etc/qmail/locals
+rm -f /etc/qmail/me
+rm -f /etc/qmail/plusdomain
+rm -f /etc/qmail/rcpthosts
+
 test ! -d /etc/qmail/users || rmdir /etc/qmail/users || :
 test ! -d /etc/qmail || rmdir /etc/qmail || :
