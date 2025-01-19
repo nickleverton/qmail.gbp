@@ -9,15 +9,15 @@ DIR=$(shell pwd)/debian/qmail
 
 patch: deb-checkdir patch-stamp
 patch-stamp:
-	for i in `ls -1 debian/diff/*.diff || :`; do \
-	  patch -p1 <$$i || exit 1; \
-	done
-	for i in `ls -1 debian/patches/*.patch || :`; do \
-	  patch -p1 <$$i || exit 1; \
-	done
-	for i in `ls -1 debian/patches.njl/*.patch || :`; do \
-	  patch -p1 <$$i || exit 1; \
-	done
+	#for i in `ls -1 debian/diff/*.diff || :`; do \
+	#  patch -p1 <$$i || exit 1; \
+	#done
+	#for i in `ls -1 debian/patches/*.patch || :`; do \
+	#  patch -p1 <$$i || exit 1; \
+	#done
+	#for i in `ls -1 debian/patches.njl/*.patch || :`; do \
+	#  patch -p1 <$$i || exit 1; \
+	#done
 	ln -s debian/src/* .
 	touch patch-stamp
 ifeq ($(DEBEMAIL),<salsa-pipeline@debian.org>)
@@ -35,15 +35,15 @@ build-stamp: patch-stamp
 	touch build-stamp
 
 clean: deb-checkdir deb-checkuid
-	quilt pop -a || [ $$? = 2 ]	# exit 0 or 2 is OK
-	rm -rf .pc
+	#quilt pop -a || [ $$? = 2 ]	# exit 0 or 2 is OK
+	#rm -rf .pc
 	$(MAKE) clean
 	test ! -r conf-qmail'{orig}' || mv -f conf-qmail'{orig}' conf-qmail
-	if test -e patch-stamp ; then \
-	  for i in `ls -1r debian/patches.njl/*.patch || :`; do patch -p1 -R <$$i; done ; \
-	  for i in `ls -1r debian/patches/*.patch || :`; do patch -p1 -R <$$i; done ; \
-	  for i in `ls -1r debian/diff/*.diff || :`; do patch -p1 -R <$$i; done ; \
-	fi
+	#if test -e patch-stamp ; then \
+	#  for i in `ls -1r debian/patches.njl/*.patch || :`; do patch -p1 -R <$$i; done ; \
+	#  for i in `ls -1r debian/patches/*.patch || :`; do patch -p1 -R <$$i; done ; \
+	#  for i in `ls -1r debian/diff/*.diff || :`; do patch -p1 -R <$$i; done ; \
+	#fi
 	rm -f `ls debian/src`
 	rm -f build-stamp patch-stamp
 	rm -rf '$(DIR)' '$(DIR)'-uids-gids
@@ -114,6 +114,7 @@ install-arch: deb-checkdir deb-checkuid build-stamp
 	gzip -9 '$(DIR)'/usr/share/man/man?/*
 	# changelog
 	rm -f changelog && ln -s CHANGES changelog
+
 install-indep: deb-checkdir deb-checkuid
 	# qmail-uids-gids
 	rm -rf '$(DIR)'-uids-gids
@@ -125,6 +126,7 @@ binary-arch: install-arch qmail.deb
 	dpkg-shlibdeps '$(DIR)'/usr/bin/* '$(DIR)'/usr/sbin/*
 	dpkg-gencontrol -isp -pqmail -P'$(DIR)'
 	dpkg -b '$(DIR)' ..
+
 binary-indep: install-indep qmail-uids-gids.deb
 	dpkg-gencontrol -isp -pqmail-uids-gids -P'$(DIR)'-uids-gids
 	dpkg -b '$(DIR)'-uids-gids ..

@@ -1,0 +1,7 @@
+Index: netqmail-1.06-6.2njl/make-compile.sh
+===================================================================
+--- netqmail-1.06-6.2njl.orig/make-compile.sh
++++ netqmail-1.06-6.2njl/make-compile.sh
+@@ -1 +1 @@
+-echo exec "$CC" -c '${1+"$@"}'
++echo exec "$CC" -c --include stdio.h --include unistd.h '${1+"$@"}'

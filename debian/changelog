@@ -1,3 +1,11 @@
+netqmail (1.06-6.2~njl12.0) bookworm; urgency=medium
+
+  * Build for bookworm.
+  * Use quilt source format instead of debian/{diff,patches,patches.njl}
+  * Refresh patches 0003 and 0004 to avoid dpkg-source gripes about tabs.
+
+ -- Nick Leverton <nick@leverton.org>  Sun, 19 Jan 2025 18:45:30 +0000
+
 netqmail (1.06-6.2~njl9.0) unstable; urgency=medium
 
   * Merge in from branch 1.06-5.0njl

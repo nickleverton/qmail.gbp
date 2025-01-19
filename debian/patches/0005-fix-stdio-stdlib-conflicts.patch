@@ -1,0 +1,367 @@
+Index: netqmail-1.06-6.2njl/auto-str.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/auto-str.c
++++ netqmail-1.06-6.2njl/auto-str.c
+@@ -5,7 +5,7 @@
+ char buf1[256];
+ substdio ss1 = SUBSTDIO_FDBUF(write,1,buf1,sizeof(buf1));
+ 
+-void puts(s)
++void ss_puts(s)
+ char *s;
+ {
+   if (substdio_puts(&ss1,s) == -1) _exit(111);
+@@ -25,20 +25,20 @@ char **argv;
+   value = argv[2];
+   if (!value) _exit(100);
+ 
+-  puts("char ");
+-  puts(name);
+-  puts("[] = \"\\\n");
++  ss_puts("char ");
++  ss_puts(name);
++  ss_puts("[] = \"\\\n");
+ 
+   while (ch = *value++) {
+-    puts("\\");
++    ss_puts("\\");
+     octal[3] = 0;
+     octal[2] = '0' + (ch & 7); ch >>= 3;
+     octal[1] = '0' + (ch & 7); ch >>= 3;
+     octal[0] = '0' + (ch & 7);
+-    puts(octal);
++    ss_puts(octal);
+   }
+ 
+-  puts("\\\n\";\n");
++  ss_puts("\\\n\";\n");
+   if (substdio_flush(&ss1) == -1) _exit(111);
+   _exit(0);
+ }
+Index: netqmail-1.06-6.2njl/auto-int8.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/auto-int8.c
++++ netqmail-1.06-6.2njl/auto-int8.c
+@@ -7,7 +7,7 @@
+ char buf1[256];
+ substdio ss1 = SUBSTDIO_FDBUF(write,1,buf1,sizeof(buf1));
+ 
+-void puts(s)
++void ss_puts(s)
+ char *s;
+ {
+   if (substdio_puts(&ss1,s) == -1) _exit(111);
+@@ -30,11 +30,11 @@ char **argv;
+   scan_8long(value,&num);
+   strnum[fmt_ulong(strnum,num)] = 0;
+ 
+-  puts("int ");
+-  puts(name);
+-  puts(" = ");
+-  puts(strnum);
+-  puts(";\n");
++  ss_puts("int ");
++  ss_puts(name);
++  ss_puts(" = ");
++  ss_puts(strnum);
++  ss_puts(";\n");
+   if (substdio_flush(&ss1) == -1) _exit(111);
+   _exit(0);
+ }
+Index: netqmail-1.06-6.2njl/auto-int.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/auto-int.c
++++ netqmail-1.06-6.2njl/auto-int.c
+@@ -7,7 +7,7 @@
+ char buf1[256];
+ substdio ss1 = SUBSTDIO_FDBUF(write,1,buf1,sizeof(buf1));
+ 
+-void puts(s)
++void ss_puts(s)
+ char *s;
+ {
+   if (substdio_puts(&ss1,s) == -1) _exit(111);
+@@ -30,11 +30,11 @@ char **argv;
+   scan_ulong(value,&num);
+   strnum[fmt_ulong(strnum,num)] = 0;
+ 
+-  puts("int ");
+-  puts(name);
+-  puts(" = ");
+-  puts(strnum);
+-  puts(";\n");
++  ss_puts("int ");
++  ss_puts(name);
++  ss_puts(" = ");
++  ss_puts(strnum);
++  ss_puts(";\n");
+   if (substdio_flush(&ss1) == -1) _exit(111);
+   _exit(0);
+ }
+Index: netqmail-1.06-6.2njl/auto-uid.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/auto-uid.c
++++ netqmail-1.06-6.2njl/auto-uid.c
+@@ -10,7 +10,7 @@
+ char buf1[256];
+ substdio ss1 = SUBSTDIO_FDBUF(write,1,buf1,sizeof(buf1));
+ 
+-void outs(s) /* was named puts, but Solaris pwd.h includes stdio.h. dorks. */
++void outs(s) /* was named ss_puts, but Solaris pwd.h includes stdio.h. dorks. */
+ char *s;
+ {
+   if (substdio_puts(&ss1,s) == -1) _exit(111);
+Index: netqmail-1.06-6.2njl/qmail-inject.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/qmail-inject.c
++++ netqmail-1.06-6.2njl/qmail-inject.c
+@@ -55,7 +55,7 @@ struct qmail qqt;
+ 
+ void put(s,len) char *s; int len;
+ { if (flagqueue) qmail_put(&qqt,s,len); else substdio_put(subfdout,s,len); }
+-void puts(s) char *s; { put(s,str_len(s)); }
++void ss_puts(s) char *s; { put(s,str_len(s)); }
+ 
+ void perm() { _exit(100); }
+ void temp() { _exit(111); }
+@@ -549,16 +549,16 @@ void finishmft()
+ 
+   if (i == tocclist.len) return;
+ 
+-  puts("Mail-Followup-To: ");
++  ss_puts("Mail-Followup-To: ");
+   i = tocclist.len;
+   while (i--) {
+     if (!stralloc_copy(&sa,&tocclist.sa[i])) die_nomem();
+     if (!stralloc_0(&sa)) die_nomem();
+     if (!quote2(&sa2,sa.s)) die_nomem();
+     put(sa2.s,sa2.len);
+-    if (i) puts(",\n  ");
++    if (i) ss_puts(",\n  ");
+   }
+-  puts("\n");
++  ss_puts("\n");
+ }
+ 
+ void finishheader()
+@@ -580,9 +580,9 @@ void finishheader()
+    if (!stralloc_0(&sa)) die_nomem();
+    if (!quote2(&sa2,sa.s)) die_nomem();
+ 
+-   puts("Return-Path: <");
++   ss_puts("Return-Path: <");
+    put(sa2.s,sa2.len);
+-   puts(">\n");
++   ss_puts(">\n");
+   }
+ 
+  /* could check at this point whether there are any recipients */
+@@ -594,23 +594,23 @@ void finishheader()
+    if (!htypeseen[H_R_DATE])
+     {
+      if (!newfield_datemake(starttime)) die_nomem();
+-     puts("Resent-");
++     ss_puts("Resent-");
+      put(newfield_date.s,newfield_date.len);
+     }
+    if (!htypeseen[H_R_MESSAGEID])
+     {
+      if (!newfield_msgidmake(control_idhost.s,control_idhost.len,starttime)) die_nomem();
+-     puts("Resent-");
++     ss_puts("Resent-");
+      put(newfield_msgid.s,newfield_msgid.len);
+     }
+    if (!htypeseen[H_R_FROM])
+     {
+      defaultfrommake();
+-     puts("Resent-");
++     ss_puts("Resent-");
+      put(defaultfrom.s,defaultfrom.len);
+     }
+    if (!htypeseen[H_R_TO] && !htypeseen[H_R_CC])
+-     puts("Resent-Cc: recipient list not shown: ;\n");
++     ss_puts("Resent-Cc: recipient list not shown: ;\n");
+   }
+  else
+   {
+@@ -630,7 +630,7 @@ void finishheader()
+      put(defaultfrom.s,defaultfrom.len);
+     }
+    if (!htypeseen[H_TO] && !htypeseen[H_CC])
+-     puts("Cc: recipient list not shown: ;\n");
++     ss_puts("Cc: recipient list not shown: ;\n");
+    finishmft();
+   }
+ 
+Index: netqmail-1.06-6.2njl/qmail-pop3d.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/qmail-pop3d.c
++++ netqmail-1.06-6.2njl/qmail-pop3d.c
+@@ -45,7 +45,7 @@ void put(buf,len) char *buf; int len;
+ {
+   substdio_put(&ssout,buf,len);
+ }
+-void puts(s) char *s;
++void ss_puts(s) char *s;
+ {
+   substdio_puts(&ssout,s);
+ }
+@@ -55,9 +55,9 @@ void flush()
+ }
+ void err(s) char *s;
+ {
+-  puts("-ERR ");
+-  puts(s);
+-  puts("\r\n");
++  ss_puts("-ERR ");
++  ss_puts(s);
++  ss_puts("\r\n");
+   flush();
+ }
+ 
+@@ -73,7 +73,7 @@ void err_toobig() { err("not that many m
+ void err_nosuch() { err("unable to open that message"); }
+ void err_nounlink() { err("unable to unlink all deleted messages"); }
+ 
+-void okay(arg) char *arg; { puts("+OK \r\n"); flush(); }
++void okay(arg) char *arg; { ss_puts("+OK \r\n"); flush(); }
+ 
+ void printfn(fn) char *fn;
+ {
+@@ -153,11 +153,11 @@ void pop3_stat(arg) char *arg;
+  
+   total = 0;
+   for (i = 0;i < numm;++i) if (!m[i].flagdeleted) total += m[i].size;
+-  puts("+OK ");
++  ss_puts("+OK ");
+   put(strnum,fmt_uint(strnum,numm));
+-  puts(" ");
++  ss_puts(" ");
+   put(strnum,fmt_ulong(strnum,total));
+-  puts("\r\n");
++  ss_puts("\r\n");
+   flush();
+ }
+ 
+@@ -171,9 +171,9 @@ void pop3_rset(arg) char *arg;
+ 
+ void pop3_last(arg) char *arg;
+ {
+-  puts("+OK ");
++  ss_puts("+OK ");
+   put(strnum,fmt_uint(strnum,last));
+-  puts("\r\n");
++  ss_puts("\r\n");
+   flush();
+ }
+ 
+@@ -222,10 +222,10 @@ int i;
+ int flaguidl;
+ {
+   put(strnum,fmt_uint(strnum,i + 1));
+-  puts(" ");
++  ss_puts(" ");
+   if (flaguidl) printfn(m[i].fn);
+   else put(strnum,fmt_ulong(strnum,m[i].size));
+-  puts("\r\n");
++  ss_puts("\r\n");
+ }
+ 
+ void dolisting(arg,flaguidl) char *arg; int flaguidl;
+@@ -234,7 +234,7 @@ void dolisting(arg,flaguidl) char *arg;
+   if (*arg) {
+     i = msgno(arg);
+     if (i == -1) return;
+-    puts("+OK ");
++    ss_puts("+OK ");
+     list(i,flaguidl);
+   }
+   else {
+@@ -242,7 +242,7 @@ void dolisting(arg,flaguidl) char *arg;
+     for (i = 0;i < numm;++i)
+       if (!m[i].flagdeleted)
+ 	list(i,flaguidl);
+-    puts(".\r\n");
++    ss_puts(".\r\n");
+   }
+   flush();
+ }
+Index: netqmail-1.06-6.2njl/qmail-popup.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/qmail-popup.c
++++ netqmail-1.06-6.2njl/qmail-popup.c
+@@ -38,7 +38,7 @@ substdio ssout = SUBSTDIO_FDBUF(safewrit
+ char ssinbuf[128];
+ substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+ 
+-void puts(s) char *s;
++void ss_puts(s) char *s;
+ {
+   substdio_puts(&ssout,s);
+ }
+@@ -48,9 +48,9 @@ void flush()
+ }
+ void err(s) char *s;
+ {
+-  puts("-ERR ");
+-  puts(s);
+-  puts("\r\n");
++  ss_puts("-ERR ");
++  ss_puts(s);
++  ss_puts("\r\n");
+   flush();
+ }
+ 
+@@ -66,7 +66,7 @@ void err_syntax() { err("syntax error");
+ void err_wantuser() { err("USER first"); }
+ void err_authoriz(arg) char *arg; { err("authorization first"); }
+ 
+-void okay(arg) char *arg; { puts("+OK \r\n"); flush(); }
++void okay(arg) char *arg; { ss_puts("+OK \r\n"); flush(); }
+ void pop3_quit(arg) char *arg; { okay(0); die(); }
+ 
+ 
+@@ -127,10 +127,10 @@ void pop3_greet()
+   s += fmt_ulong(s,(unsigned long) now());
+   *s++ = '@';
+   *s++ = 0;
+-  puts("+OK <");
+-  puts(unique);
+-  puts(hostname);
+-  puts(">\r\n");
++  ss_puts("+OK <");
++  ss_puts(unique);
++  ss_puts(hostname);
++  ss_puts(">\r\n");
+   flush();
+ }
+ void pop3_user(arg) char *arg;
+Index: netqmail-1.06-6.2njl/alloc.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/alloc.c
++++ netqmail-1.06-6.2njl/alloc.c
+@@ -1,8 +1,7 @@
+ #include <limits.h>
++#include <stdlib.h>
+ #include "alloc.h"
+ #include "error.h"
+-extern char *malloc();
+-extern void free();
+ 
+ #define ALIGNMENT 16 /* XXX: assuming that this alignment is enough */
+ #define SPACE 4096 /* must be multiple of ALIGNMENT */
+Index: netqmail-1.06-6.2njl/readwrite.h
+===================================================================
+--- netqmail-1.06-6.2njl.orig/readwrite.h
++++ netqmail-1.06-6.2njl/readwrite.h
+@@ -1,7 +1,8 @@
+ #ifndef READWRITE_H
+ #define READWRITE_H
+ 
+-extern int read();
+-extern int write();
++#include <unistd.h>
++//extern int read();
++//extern int write();
+ 
+ #endif
