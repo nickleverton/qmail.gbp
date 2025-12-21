@@ -1,7 +1,8 @@
+#include "cdbmss.h"
+
 #include "readwrite.h"
 #include "seek.h"
 #include "alloc.h"
-#include "cdbmss.h"
 
 int cdbmss_start(c,fd)
 struct cdbmss *c;
@@ -27,14 +28,14 @@ unsigned int datalen;
   cdbmake_pack(c->packbuf,(uint32) keylen);
   cdbmake_pack(c->packbuf + 4,(uint32) datalen);
   if (substdio_put(&c->ss,c->packbuf,8) == -1) return -1;
-  if (substdio_put(&c->ss,key,keylen) == -1) return -1;
-  if (substdio_put(&c->ss,data,datalen) == -1) return -1;
+  if (substdio_put(&c->ss,(char *)key,keylen) == -1) return -1;
+  if (substdio_put(&c->ss,(char *)data,datalen) == -1) return -1;
 
   h = CDBMAKE_HASHSTART;
   for (i = 0;i < keylen;++i)
     h = cdbmake_hashadd(h,(unsigned int) key[i]);
 
-  if (!cdbmake_add(&c->cdbm,h,c->pos,alloc)) return -1;
+  if (!cdbmake_add(&c->cdbm,h,c->pos)) return -1;
 
   c->pos += 8 + keylen + datalen; /* XXX: overflow? */
   return 0;
@@ -47,7 +48,7 @@ struct cdbmss *c;
   uint32 len;
   uint32 u;
 
-  if (!cdbmake_split(&c->cdbm,alloc)) return -1;
+  if (!cdbmake_split(&c->cdbm)) return -1;
 
   for (i = 0;i < 256;++i) {
     len = cdbmake_throw(&c->cdbm,c->pos,i);

@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "auto_qmail.h"
 #include "qmail.h"
 #include "received.h"
@@ -12,26 +13,27 @@
 #include "str.h"
 
 void resources() { _exit(111); }
+void badproto() { _exit(100); }
 
-int safewrite(fd,buf,len) int fd; char *buf; int len;
+ssize_t safewrite(int fd, const void *buf, size_t len)
 {
-  int r;
+  ssize_t r;
   r = write(fd,buf,len);
-  if (r <= 0) _exit(0);
+  if (r == 0 || r == -1) _exit(0);
   return r;
 }
-int saferead(fd,buf,len) int fd; char *buf; int len;
+ssize_t saferead(int fd, void *buf, size_t len)
 {
-  int r;
+  ssize_t r;
   r = read(fd,buf,len);
-  if (r <= 0) _exit(0);
+  if (r == 0 || r == -1) _exit(0);
   return r;
 }
 
 char ssinbuf[512];
-substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
 char ssoutbuf[256];
-substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof ssoutbuf);
+substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
 
 unsigned long bytesleft = 100;
 
@@ -51,6 +53,7 @@ unsigned long getlen()
     getbyte(&ch);
     if (ch == ':') return len;
     if (len > 200000000) resources();
+    if (ch < '0' || ch > '9') badproto();
     len = 10 * len + (ch - '0');
   }
 }
@@ -80,7 +83,7 @@ void identify()
   if (!local) local = env_get("TCPLOCALIP");
   if (!local) local = "unknown";
  
-  received(&qq,"QMQP",local,remoteip,remotehost,remoteinfo,(char *) 0);
+  received(&qq,"QMQP",local,remoteip,remotehost,remoteinfo,NULL);
 }
 
 char buf[1000];
@@ -107,7 +110,7 @@ int getbuf()
 
 int flagok = 1;
 
-void
+int
 main()
 {
   char *result;

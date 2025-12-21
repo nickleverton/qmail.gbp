@@ -1,7 +1,10 @@
+#include <sys/stat.h>
+#include <unistd.h>
 #include "fd.h"
 #include "prot.h"
 #include "exit.h"
 #include "fork.h"
+#include "noreturn.h"
 #include "uidgid.h"
 #include "auto_uids.h"
 #include "auto_users.h"
@@ -11,7 +14,7 @@ char *(qcargs[]) = { "qmail-clean", 0 };
 char *(qlargs[]) = { "qmail-lspawn", "./Mailbox", 0 };
 char *(qrargs[]) = { "qmail-rspawn", 0 };
 
-void die() { _exit(111); }
+void _noreturn_ die() { _exit(111); }
 
 int pi0[2];
 int pi1[2];
@@ -37,9 +40,7 @@ void closepipes() {
   close(pi5[0]); close(pi5[1]); close(pi6[0]); close(pi6[1]);
 }
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   if (chdir("/") == -1) die();
   umask(077);
@@ -104,6 +105,7 @@ char **argv;
   switch(fork()) {
     case -1: die();
     case 0:
+      if (prot_gids(auto_userr, auto_gidq) == -1) die();
       if (prot_uid(auto_uidr) == -1) die();
       if (fd_copy(0,pi3[0]) == -1) die();
       if (fd_copy(1,pi4[1]) == -1) die();

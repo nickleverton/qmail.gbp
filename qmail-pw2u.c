@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "byte.h"
 #include "substdio.h"
 #include "readwrite.h"
@@ -230,9 +231,7 @@ int fd;
 substdio ss;
 char ssbuf[SUBSTDIO_INSIZE];
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   int opt;
   int match;
@@ -249,7 +248,7 @@ char **argv;
       case 'C': *auto_break = 0; break;
       case '?':
       default:
-	_exit(100);
+	return 100;
     }
 
   if (chdir(auto_qmail) == -1) die_chdir();
@@ -310,5 +309,5 @@ char **argv;
 
   if (substdio_puts(subfdout,".\n") == -1) die_write();
   if (substdio_flush(subfdout) == -1) die_write();
-  _exit(0);
+  return 0;
 }

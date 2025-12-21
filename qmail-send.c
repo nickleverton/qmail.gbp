@@ -1,5 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <unistd.h>
 #include "readwrite.h"
 #include "sig.h"
 #include "direntry.h"
@@ -147,7 +149,7 @@ char *recip;
 
   for (i = 0;i <= addr.len;++i)
     if (!i || (i == at + 1) || (i == addr.len) || ((i > at) && (addr.s[i] == '.')))
-      if (x = constmap(&mapvdoms,addr.s + i,addr.len - i)) {
+      if ((x = constmap(&mapvdoms,addr.s + i,addr.len - i))) {
         if (!*x) break;
         if (!stralloc_cats(&rwline,x)) return 0;
         if (!stralloc_cats(&rwline,"-")) return 0;
@@ -297,7 +299,7 @@ fd_set *wfds;
          int len;
          len = comm_buf[c].len;
          w = write(chanfdout[c],comm_buf[c].s + comm_pos[c],len - comm_pos[c]);
-         if (w <= 0)
+         if (w == 0 || w == -1)
 	  {
 	   if ((w == -1) && (errno == error_pipe))
 	     spawndied(c);
@@ -440,7 +442,7 @@ void pqstart()
 
  readsubdir_init(&rs,"info",pausedir);
 
- while (x = readsubdir_next(&rs,&id))
+ while ((x = readsubdir_next(&rs,&id)))
    if (x > 0)
      pqadd(id);
 }
@@ -449,15 +451,15 @@ void pqfinish()
 {
  int c;
  struct prioq_elt pe;
- time_t ut[2]; /* XXX: more portable than utimbuf, but still worrisome */
+ struct timeval ut[2] = { 0 };
 
  for (c = 0;c < CHANNELS;++c)
    while (prioq_min(&pqchan[c],&pe))
     {
      prioq_delmin(&pqchan[c]);
      fnmake_chanaddr(pe.id,c);
-     ut[0] = ut[1] = pe.dt;
-     if (utime(fn.s,ut) == -1)
+     ut[0].tv_sec = ut[1].tv_sec = pe.dt;
+     if (utimes(fn.s,ut) == -1)
        log3("warning: unable to utime ",fn.s,"; message will be retried too soon\n");
     }
 }
@@ -583,7 +585,7 @@ char *recip;
 
  for (i = 0;i <= domainlen;++i)
    if ((i == 0) || (i == domainlen) || (domain[i] == '.'))
-     if (prepend = constmap(&mapvdoms,domain + i,domainlen - i))
+     if ((prepend = constmap(&mapvdoms,domain + i,domainlen - i)))
       {
        if (!*prepend) break;
        i = str_len(prepend);
@@ -631,7 +633,7 @@ char *report;
  while (pos < bouncetext.len)
   {
    w = write(fd,bouncetext.s + pos,bouncetext.len - pos);
-   if (w <= 0)
+   if (w == 0 || w == -1)
     {
      log1("alert: unable to append to bounce message; HELP! sleeping...\n");
      sleep(10);
@@ -751,7 +753,7 @@ I tried to deliver a bounce message to this address, but the bounce bounced!\n\
     { log1("warning: trouble injecting bounce message, will try later\n"); return 0; }
 
    strnum2[fmt_ulong(strnum2,id)] = 0;
-   log2("bounce msg ",strnum2);
+   qslog2("bounce msg ",strnum2);
    strnum2[fmt_ulong(strnum2,qp)] = 0;
    log3(" qp ",strnum2,"\n");
   }
@@ -791,8 +793,8 @@ void del_status()
   for (c = 0;c < CHANNELS;++c) {
     strnum2[fmt_ulong(strnum2,(unsigned long) concurrencyused[c])] = 0;
     strnum3[fmt_ulong(strnum3,(unsigned long) concurrency[c])] = 0;
-    log2(chanstatusmsg[c],strnum2);
-    log2("/",strnum3);
+    qslog2(chanstatusmsg[c],strnum2);
+    qslog2("/",strnum3);
   }
   if (flagexitasap) log1(" exitasap");
   log1("\n");
@@ -856,7 +858,7 @@ char *recip;
 
  strnum2[fmt_ulong(strnum2,d[c][i].delid)] = 0;
  strnum3[fmt_ulong(strnum3,jo[j].id)] = 0;
- log2("starting delivery ",strnum2);
+ qslog2("starting delivery ",strnum2);
  log3(": msg ",strnum3,tochan[c]);
  logsafe(recip);
  log1("\n");
@@ -1042,7 +1044,7 @@ datetime_sec nextretry(birth,c)
 datetime_sec birth;
 int c;
 {
- int n;
+ datetime_sec n;
 
  if (birth > recent) n = 0;
  else n = squareroot(recent - birth); /* no need to add fuzz to recent */
@@ -1349,14 +1351,14 @@ fd_set *rfds;
 	 fnmake_info(id);
          log3("warning: trouble writing to ",fn.s,"\n"); goto fail;
 	}
-       log2("info msg ",strnum3);
+       qslog2("info msg ",strnum3);
        strnum2[fmt_ulong(strnum2,(unsigned long) st.st_size)] = 0;
-       log2(": bytes ",strnum2);
+       qslog2(": bytes ",strnum2);
        log1(" from <"); logsafe(todoline.s + 1);
        strnum2[fmt_ulong(strnum2,pid)] = 0;
-       log2("> qp ",strnum2);
+       qslog2("> qp ",strnum2);
        strnum2[fmt_ulong(strnum2,uid)] = 0;
-       log2(" uid ",strnum2);
+       qslog2(" uid ",strnum2);
        log1("\n");
        break;
      case 'T':
@@ -1509,7 +1511,7 @@ void reread()
   }
 }
 
-void main()
+int main(void)
 {
  int fd;
  datetime_sec wakeup;
@@ -1587,7 +1589,7 @@ void main()
    else tv.tv_sec = wakeup - recent + SLEEP_FUZZ;
    tv.tv_usec = 0;
 
-   if (select(nfds,&rfds,&wfds,(fd_set *) 0,&tv) == -1)
+   if (select(nfds,&rfds,&wfds,NULL,&tv) == -1)
      if (errno == error_intr)
        ;
      else

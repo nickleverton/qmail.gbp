@@ -1,10 +1,12 @@
+#include "control.h"
+
+#include <unistd.h>
 #include "readwrite.h"
 #include "open.h"
 #include "getln.h"
 #include "stralloc.h"
 #include "substdio.h"
 #include "error.h"
-#include "control.h"
 #include "alloc.h"
 #include "scan.h"
 

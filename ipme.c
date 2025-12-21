@@ -1,3 +1,5 @@
+#include "ipme.h"
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -8,12 +10,12 @@
 #ifndef SIOCGIFCONF /* whatever works */
 #include <sys/sockio.h>
 #endif
+#include <unistd.h>
 #include "hassalen.h"
 #include "byte.h"
 #include "ip.h"
 #include "ipalloc.h"
 #include "stralloc.h"
-#include "ipme.h"
 
 static int ipmeok = 0;
 ipalloc ipme = {0};

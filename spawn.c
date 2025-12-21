@@ -1,5 +1,8 @@
+#include "spawn.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "sig.h"
 #include "wait.h"
 #include "substdio.h"
@@ -16,10 +19,7 @@
 #include "auto_uids.h"
 #include "auto_spawn.h"
 
-extern int truncreport;
-extern int spawn();
-extern void report();
-extern void initialize();
+uid_t auto_uidq;
 
 struct delivery
  {
@@ -50,7 +50,7 @@ void sigchld()
 
 int flagwriting = 1;
 
-int okwrite(fd,buf,n) int fd; char *buf; int n;
+ssize_t okwrite(int fd, const void *buf, size_t n)
 {
  int w;
  if (!flagwriting) return n;
@@ -176,9 +176,7 @@ void getcmd()
 
 char inbuf[128];
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
  char ch;
  int i;
@@ -221,7 +219,7 @@ char **argv;
    for (i = 0;i < auto_spawn;++i) if (d[i].used)
     { FD_SET(d[i].fdin,&rfds); if (d[i].fdin >= nfds) nfds = d[i].fdin + 1; }
 
-   r = select(nfds,&rfds,(fd_set *) 0,(fd_set *) 0,(struct timeval *) 0);
+   r = select(nfds,&rfds,NULL,NULL,NULL);
    sig_childblock();
 
    if (r != -1)

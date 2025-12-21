@@ -1,15 +1,10 @@
 #include "substdio.h"
-#include "str.h"
 #include "byte.h"
 #include "error.h"
 
-static int allwrite(op,fd,buf,len)
-register int (*op)();
-register int fd;
-register char *buf;
-register unsigned int len;
+static int allwrite(ssize_t (*op)(int,const char*,size_t), int fd, const char *buf, size_t len)
 {
-  register int w;
+  ssize_t w;
 
   while (len) {
     w = op(fd,buf,len);
@@ -17,17 +12,16 @@ register unsigned int len;
       if (errno == error_intr) continue;
       return -1; /* note that some data may have been written */
     }
-    if (w == 0) ; /* luser's fault */
+    /* if (w == 0), luser's fault */
     buf += w;
     len -= w;
   }
   return 0;
 }
 
-int substdio_flush(s)
-register substdio *s;
+int substdio_flush(substdio *s)
 {
-  register int p;
+  int p;
  
   p = s->p;
   if (!p) return 0;
@@ -35,12 +29,9 @@ register substdio *s;
   return allwrite(s->op,s->fd,s->x,p);
 }
 
-int substdio_bput(s,buf,len)
-register substdio *s;
-register char *buf;
-register unsigned int len;
+int substdio_bput(substdio *s, const char *buf, size_t len)
 {
-  register unsigned int n;
+  unsigned int n;
  
   while (len > (n = s->n - s->p)) {
     byte_copy(s->x + s->p,n,buf);
@@ -55,12 +46,9 @@ register unsigned int len;
   return 0;
 }
 
-int substdio_put(s,buf,len)
-register substdio *s;
-register char *buf;
-register unsigned int len;
+int substdio_put(substdio *s, const char *buf, size_t len)
 {
-  register unsigned int n = s->n; /* how many bytes to write in next chunk */
+  unsigned int n = s->n; /* how many bytes to write in next chunk */
  
   /* check if the input would fit in the buffer without flushing */
   if (len > n - (unsigned int)s->p) {
@@ -82,32 +70,8 @@ register unsigned int len;
   return 0;
 }
 
-int substdio_putflush(s,buf,len)
-register substdio *s;
-register char *buf;
-register int len;
+int substdio_putflush(substdio *s, const char *buf, size_t len)
 {
   if (substdio_flush(s) == -1) return -1;
   return allwrite(s->op,s->fd,buf,len);
-}
-
-int substdio_bputs(s,buf)
-register substdio *s;
-register char *buf;
-{
-  return substdio_bput(s,buf,str_len(buf));
-}
-
-int substdio_puts(s,buf)
-register substdio *s;
-register char *buf;
-{
-  return substdio_put(s,buf,str_len(buf));
-}
-
-int substdio_putsflush(s,buf)
-register substdio *s;
-register char *buf;
-{
-  return substdio_putflush(s,buf,str_len(buf));
 }

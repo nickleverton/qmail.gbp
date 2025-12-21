@@ -15,22 +15,16 @@
 
 struct qmail qqt;
 
-int mywrite(fd,buf,len) int fd; char *buf; int len;
-{
-  qmail_put(&qqt,buf,len);
-  return len;
-}
+GEN_QMAILPUT_WRITE(&qqt)
 
 char inbuf[SUBSTDIO_INSIZE];
 char outbuf[1];
-substdio ssin = SUBSTDIO_FDBUF(read,0,inbuf,sizeof inbuf);
-substdio ssout = SUBSTDIO_FDBUF(mywrite,-1,outbuf,sizeof outbuf);
+substdio ssin = SUBSTDIO_FDBUF(read,0,inbuf,sizeof(inbuf));
+substdio ssout = SUBSTDIO_FDBUF(qmail_put_write,-1,outbuf,sizeof(outbuf));
 
 char num[FMT_ULONG];
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   char *sender;
   char *dtline;
@@ -38,7 +32,7 @@ char **argv;
   int wstat;
   char *qqx;
  
-  if (!argv[1] || !argv[2])
+  if (argc < 3)
     strerr_die1x(100,"condredirect: usage: condredirect newaddress program [ arg ... ]");
  
   pid = fork();

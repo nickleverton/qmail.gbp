@@ -1,14 +1,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <unistd.h>
 #include "strerr.h"
 #include "error.h"
 #include "readwrite.h"
-#include "exit.h"
 #include "hier.h"
 
 extern void init_uidgid();
-extern void hier();
 
 #define FATAL "instcheck: fatal: "
 #define WARNING "instcheck: warning: "
@@ -77,9 +76,12 @@ void z(char *home, char *file, int len, uid_t uid, gid_t gid, int mode)
   perm("",home,"/",file,S_IFREG,uid,gid,mode);
 }
 
-void main()
+int main(int argc, char **argv)
 {
   init_uidgid();
-  hier();
-  _exit(0);
+  if (argc == 2 && strcmp(argv[1],"queue-only") == 0)
+    hier_queue();
+  else
+    hier();
+  return 0;
 }

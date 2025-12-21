@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "readwrite.h"
 #include "sig.h"
 #include "exit.h"
@@ -12,6 +13,7 @@
 #include "now.h"
 #include "triggerpull.h"
 #include "extra.h"
+#include "noreturn.h"
 #include "uidgid.h"
 #include "auto_qmail.h"
 #include "auto_uids.h"
@@ -60,11 +62,11 @@ void cleanup()
   }
 }
 
-void die(e) int e; { _exit(e); }
-void die_write() { cleanup(); die(53); }
-void die_read() { cleanup(); die(54); }
-void sigalrm() { /* thou shalt not clean up here */ die(52); }
-void sigbug() { die(81); }
+void _noreturn_ die(int e) { _exit(e); }
+void _noreturn_ die_write() { cleanup(); die(53); }
+void _noreturn_ die_read() { cleanup(); die(54); }
+void _noreturn_ sigalrm() { /* thou shalt not clean up here */ die(52); }
+void _noreturn_ sigbug() { die(81); }
 
 unsigned int receivedlen;
 char *received;
@@ -97,7 +99,7 @@ char *s;
 
 void received_setup()
 {
- receivedlen = receivedfmt((char *) 0);
+ receivedlen = receivedfmt(NULL);
  received = alloc(receivedlen + 1);
  if (!received) die(51);
  receivedfmt(received);
@@ -128,7 +130,7 @@ int flagsplit;
 {
  char *s;
 
- s = alloc(fmtqfn((char *) 0,dirslash,messnum,flagsplit));
+ s = alloc(fmtqfn(NULL,dirslash,messnum,flagsplit));
  if (!s) die(51);
  fmtqfn(s,dirslash,messnum,flagsplit);
  return s;
@@ -140,13 +142,13 @@ void pidopen()
  unsigned long seq;
 
  seq = 1;
- len = pidfmt((char *) 0,seq);
+ len = pidfmt(NULL,seq);
  pidfn = alloc(len);
  if (!pidfn) die(51);
 
  for (seq = 1;seq < 10;++seq)
   {
-   if (pidfmt((char *) 0,seq) > len) die(81); /* paranoia */
+   if (pidfmt(NULL,seq) > len) die(81); /* paranoia */
    pidfmt(pidfn,seq);
    messfd = open_excl(pidfn);
    if (messfd != -1) return;
@@ -157,7 +159,7 @@ void pidopen()
 
 char tmp[FMT_ULONG];
 
-void main()
+int main(void)
 {
  unsigned int len;
  char ch;
@@ -260,5 +262,5 @@ void main()
  if (link(intdfn,todofn) == -1) die(66);
 
  triggerpull();
- die(0);
+ return 0;
 }

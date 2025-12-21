@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "stralloc.h"
 #include "substdio.h"
 #include "qmail.h"
@@ -5,6 +6,7 @@
 #include "str.h"
 #include "fmt.h"
 #include "env.h"
+#include "noreturn.h"
 #include "scan.h"
 #include "sig.h"
 #include "rcpthosts.h"
@@ -14,31 +16,31 @@
 #include "received.h"
 #include "exit.h"
 
-void badproto() { _exit(100); }
-void resources() { _exit(111); }
+void _noreturn_ badproto() { _exit(100); }
+void _noreturn_ resources() { _exit(111); }
 
-int safewrite(fd,buf,len) int fd; char *buf; int len;
+ssize_t safewrite(int fd, const void *buf, size_t len)
 {
-  int r;
+  ssize_t r;
   r = write(fd,buf,len);
-  if (r <= 0) _exit(0);
+  if (r == 0 || r == -1) _exit(0);
   return r;
 }
 
 char ssoutbuf[256];
-substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof ssoutbuf);
+substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
 
-int saferead(fd,buf,len) int fd; char *buf; int len;
+ssize_t saferead(int fd, void *buf, size_t len)
 {
-  int r;
+  ssize_t r;
   substdio_flush(&ssout);
   r = read(fd,buf,len);
-  if (r <= 0) _exit(0);
+  if (r == 0 || r == -1) _exit(0);
   return r;
 }
 
 char ssinbuf[512];
-substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
 
 unsigned long getlen()
 {
@@ -48,6 +50,7 @@ unsigned long getlen()
     substdio_get(&ssin,&ch,1);
     if (ch == ':') return len;
     if (len > 200000000) resources();
+    if (ch < '0' || ch > '9') badproto();
     len = 10 * len + (ch - '0');
   }
 }
@@ -76,7 +79,7 @@ stralloc failure = {0};
 char *relayclient;
 int relayclientlen;
 
-void
+int
 main()
 {
   char ch;
@@ -133,7 +136,7 @@ main()
     else if (ch == 13) flagdos = 1;
     else badproto();
  
-    received(&qq,"QMTP",local,remoteip,remotehost,remoteinfo,(char *) 0);
+    received(&qq,"QMTP",local,remoteip,remotehost,remoteinfo,NULL);
  
     /* XXX: check for loops? only if len is big? */
  

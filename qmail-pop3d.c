@@ -22,30 +22,19 @@
 
 void die() { _exit(0); }
 
-int saferead(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutread(1200,fd,buf,len);
-  if (r <= 0) die();
-  return r;
-}
+extern int rename(const char *, const char *);
 
-int safewrite(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutwrite(1200,fd,buf,len);
-  if (r <= 0) die();
-  return r;
-}
+GEN_SAFE_TIMEOUTREAD(saferead,1200,fd,die())
+GEN_SAFE_TIMEOUTWRITE(safewrite,1200,fd,die())
 
 char sserrbuf[128];
-substdio sserr = SUBSTDIO_FDBUF(safewrite,2,sserrbuf,sizeof sserrbuf);
+substdio sserr = SUBSTDIO_FDBUF(safewrite,2,sserrbuf,sizeof(sserrbuf));
 
 char ssoutbuf[1024];
-substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof ssoutbuf);
+substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
 
 char ssinbuf[128];
-substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
 
 void put(buf,len) char *buf; int len;
 {
@@ -297,9 +286,7 @@ struct commands pop3commands[] = {
 , { 0, err_unimpl, 0 }
 } ;
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   sig_alarmcatch(die);
   sig_pipeignore();

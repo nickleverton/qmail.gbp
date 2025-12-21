@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <netinet/in.h>
+#include "noreturn.h"
 #include "sig.h"
 #include "stralloc.h"
 #include "str.h"
@@ -16,7 +17,7 @@
 #include "exit.h"
 #include "case.h"
 
-void die() { _exit(111); }
+void _noreturn_ die() { _exit(111); }
 
 struct sockaddr_in salocal;
 unsigned long localport;
@@ -30,11 +31,9 @@ stralloc remotename = {0};
 
 char temp[IPFMT + FMT_ULONG];
 
-void main(argc,argv)
-int argc;
-char *argv[];
+int main(int argc, char **argv)
 {
- int dummy;
+ unsigned int dummy;
  char *proto;
  int opt;
  int flagremoteinfo;

@@ -1,3 +1,4 @@
+# Keep .gitignore and TARGETS in sync!
 auto-ccld.sh
 make-load
 load
@@ -6,7 +7,6 @@ compile
 qmail-local.o
 qmail.o
 quote.o
-now.o
 gfrom.o
 myctime.o
 slurpclose.o
@@ -58,6 +58,7 @@ fd_copy.o
 fd_move.o
 fd.a
 haswaitp.h
+ids.a
 wait_pid.o
 wait_nohang.o
 wait.a
@@ -74,9 +75,6 @@ stralloc_cats.o
 stralloc_catb.o
 stralloc_arts.o
 stralloc.a
-alloc.o
-alloc_re.o
-alloc.a
 strerr_sys.o
 strerr_die.o
 strerr.a
@@ -90,20 +88,14 @@ subfdin.o
 subfdins.o
 substdio_copy.o
 substdio.a
-error.o
 error_str.o
 error_temp.o
 error.a
-str_len.o
-str_diff.o
-str_diffn.o
-str_cpy.o
 str_chr.o
 str_rchr.o
 str_start.o
 byte_chr.o
 byte_rchr.o
-byte_diff.o
 byte_copy.o
 byte_cr.o
 byte_zero.o
@@ -146,16 +138,6 @@ cdb_seek.o
 cdb.a
 uid.o
 gid.o
-auto_uida.o
-auto_uidd.o
-auto_uidl.o
-auto_uido.o
-auto_uidp.o
-auto_uidq.o
-auto_uidr.o
-auto_uids.o
-auto_gidn.o
-auto_gidq.o
 qmail-lspawn
 qmail-getpw.o
 auto_break.c
@@ -292,8 +274,6 @@ ipmeprint.o
 ipmeprint
 qreceipt.o
 qreceipt
-qsmhook.o
-qsmhook
 qbiff.o
 qbiff
 forward.o
@@ -310,17 +290,13 @@ maildirmake.o
 maildirmake
 maildir2mbox.o
 maildir2mbox
-maildirwatch.o
-maildirwatch
-qail
-elq
-pinq
 hier.o
 install
 instcheck.o
 instcheck
 instchown.o
 instchown
+instfiles.o
 instpackage.o
 instpackage
 instuidgid.o
@@ -376,7 +352,6 @@ bouncesaying.0
 except.0
 maildirmake.0
 maildir2mbox.0
-maildirwatch.0
 qmail.0
 qmail-limits.7
 qmail-limits.0

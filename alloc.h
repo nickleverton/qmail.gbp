@@ -1,8 +1,22 @@
 #ifndef ALLOC_H
 #define ALLOC_H
 
-extern /*@null@*//*@out@*/char *alloc();
-extern void alloc_free();
-extern int alloc_re();
+#include <stdlib.h>
+
+#include "deprecated.h"
+
+#define alloc(x) malloc(x)
+#define alloc_free(x) free(x)
+
+#ifdef DEPRECATED_FUNCTIONS_AVAILABLE
+static inline int _deprecated_ alloc_re(void **x, unsigned int m, unsigned int n)
+{
+  void *y = realloc(*x, n);
+  (void)m;
+  if (y != NULL)
+    *x = y;
+  return !!y;
+}
+#endif
 
 #endif

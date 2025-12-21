@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "sig.h"
 #include "substdio.h"
 #include "stralloc.h"
@@ -9,6 +10,7 @@
 #include "hfield.h"
 #include "token822.h"
 #include "control.h"
+#include "datetime.h"
 #include "env.h"
 #include "gen_alloc.h"
 #include "gen_allocdefs.h"
@@ -16,6 +18,7 @@
 #include "qmail.h"
 #include "now.h"
 #include "exit.h"
+#include "noreturn.h"
 #include "quote.h"
 #include "headerbody.h"
 #include "auto_qmail.h"
@@ -56,24 +59,32 @@ void put(s,len) char *s; int len;
 { if (flagqueue) qmail_put(&qqt,s,len); else substdio_put(subfdout,s,len); }
 void puts(s) char *s; { put(s,str_len(s)); }
 
-void perm() { _exit(100); }
-void temp() { _exit(111); }
-void die_nomem() {
+void _noreturn_ perm() { _exit(100); }
+void _noreturn_ temp() { _exit(111); }
+void _noreturn_ die_nomem() {
  substdio_putsflush(subfderr,"qmail-inject: fatal: out of memory\n"); temp(); }
-void die_invalid(sa) stralloc *sa; {
+void _noreturn_ die_invalid(sa) stralloc *sa; {
  substdio_putsflush(subfderr,"qmail-inject: fatal: invalid header field: ");
  substdio_putflush(subfderr,sa->s,sa->len); perm(); }
-void die_qqt() {
+void _noreturn_ die_qqt() {
  substdio_putsflush(subfderr,"qmail-inject: fatal: unable to run qmail-queue\n"); temp(); }
-void die_chdir() {
+void _noreturn_ die_chdir() {
  substdio_putsflush(subfderr,"qmail-inject: fatal: internal bug\n"); temp(); }
-void die_read() {
+void _noreturn_ die_read() {
  if (errno == error_nomem) die_nomem();
  substdio_putsflush(subfderr,"qmail-inject: fatal: read error\n"); temp(); }
 void doordie(sa,r) stralloc *sa; int r; {
  if (r == 1) return; if (r == -1) die_nomem();
  substdio_putsflush(subfderr,"qmail-inject: fatal: unable to parse this line:\n");
  substdio_putflush(subfderr,sa->s,sa->len); perm(); }
+/* call doordie, but if q is set ignore parse errors (i.e. r == 0) */
+static int doordie_rh(stralloc *sa, int r, int q)
+{
+  if (q && r == 0)
+    return 0;
+  doordie(sa, r);
+  return 1;
+}
 
 GEN_ALLOC_typedef(saa,stralloc,sa,len,a)
 GEN_ALLOC_readyplus(saa,stralloc,sa,len,a,10,saa_readyplus)
@@ -87,7 +98,7 @@ saa hrrlist = {0};
 saa reciplist = {0};
 int flagresent;
 
-void exitnicely()
+void _noreturn_ exitnicely()
 {
  char *qqx;
 
@@ -105,7 +116,7 @@ void exitnicely()
      if (!stralloc_0(&reciplist.sa[i])) die_nomem();
      qmail_to(&qqt,reciplist.sa[i].s);
     }
-   if (flagrh)
+   if (flagrh) {
      if (flagresent)
        for (i = 0;i < hrrlist.len;++i)
 	{
@@ -118,9 +129,10 @@ void exitnicely()
          if (!stralloc_0(&hrlist.sa[i])) die_nomem();
 	 qmail_to(&qqt,hrlist.sa[i].s);
 	}
+   }
 
    qqx = qmail_close(&qqt);
-   if (*qqx)
+   if (*qqx) {
      if (*qqx == 'D') {
        substdio_puts(subfderr,"qmail-inject: fatal: ");
        substdio_puts(subfderr,qqx + 1);
@@ -135,6 +147,7 @@ void exitnicely()
        substdio_flush(subfderr);
        temp();
      }
+   }
   }
 
  _exit(0);
@@ -343,6 +356,7 @@ stralloc *h;
 {
   int htype;
   int (*rw)() = 0;
+  int rwmayfail = 0;
  
   htype = hfield_known(h->s,h->len);
   if (flagdeletefrom) if (htype == H_FROM) return;
@@ -357,13 +371,16 @@ stralloc *h;
  
   switch(htype) {
     case H_TO: case H_CC:
-      if (flagrh) rw = rwtocc;
+      rw = rwtocc;
+      rwmayfail = 1;
       break;
     case H_BCC: case H_APPARENTLYTO:
-      if (flagrh) rw = rwhr;
+      rw = rwhr;
+      rwmayfail = 1;
       break;
     case H_R_TO: case H_R_CC: case H_R_BCC:
-      if (flagrh) rw = rwhrr;
+      rw = rwhrr;
+      rwmayfail = 1;
       break;
     case H_RETURNPATH:
       rw = rwreturn; break;
@@ -374,10 +391,11 @@ stralloc *h;
   }
 
   if (rw) {
-    doordie(h,token822_parse(&hfin,h,&hfbuf));
-    doordie(h,token822_addrlist(&hfrewrite,&hfaddr,&hfin,rw));
-    if (token822_unparse(h,&hfrewrite,LINELEN) != 1)
-      die_nomem();
+    if (doordie_rh(h,token822_parse(&hfin,h,&hfbuf),rwmayfail) &&
+        doordie_rh(h,token822_addrlist(&hfrewrite,&hfaddr,&hfin,rw),rwmayfail)) {
+      if (token822_unparse(h,&hfrewrite,LINELEN) != 1)
+        die_nomem();
+    }
   }
  
   if (htype == H_BCC) return;
@@ -684,9 +702,7 @@ void getcontrols()
 #define RECIP_HEADER 3
 #define RECIP_AH 4
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
  int i;
  int opt;

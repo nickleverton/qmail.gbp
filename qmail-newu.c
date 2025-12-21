@@ -1,3 +1,5 @@
+#include <sys/stat.h>
+#include <unistd.h>
 #include "stralloc.h"
 #include "subfd.h"
 #include "getln.h"
@@ -10,6 +12,8 @@
 #include "error.h"
 #include "case.h"
 #include "auto_qmail.h"
+
+extern int rename(const char *, const char *);
 
 void die_temp() { _exit(111); }
 
@@ -69,7 +73,7 @@ int match;
 
 stralloc wildchars = {0};
 
-void main()
+int main(void)
 {
   int i;
   int numcolons;
@@ -134,5 +138,5 @@ void main()
   if (close(fdtemp) == -1) die_writet(); /* NFS stupidity */
   if (rename("users/cdb.tmp","users/cdb") == -1) die_rename();
 
-  _exit(0);
+  return 0;
 }

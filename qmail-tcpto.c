@@ -1,4 +1,5 @@
 /* XXX: this program knows quite a bit about tcpto's internals */
+#include <unistd.h>
 
 #include "substdio.h"
 #include "subfd.h"
@@ -34,7 +35,7 @@ char tcpto_buf[1024];
 
 char tmp[FMT_ULONG + IPFMT];
 
-void main()
+int main(void)
 {
  int fdlock;
  int fd;

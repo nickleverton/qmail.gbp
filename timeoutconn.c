@@ -1,3 +1,5 @@
+#include "timeoutconn.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,7 +10,6 @@
 #include "readwrite.h"
 #include "ip.h"
 #include "byte.h"
-#include "timeoutconn.h"
 
 int timeoutconn(s,ip,port,timeout)
 int s;
@@ -42,9 +43,9 @@ int timeout;
   FD_SET(s,&wfds);
   tv.tv_sec = timeout; tv.tv_usec = 0;
  
-  if (select(s + 1,(fd_set *) 0,&wfds,(fd_set *) 0,&tv) == -1) return -1;
+  if (select(s + 1,NULL,&wfds,NULL,&tv) == -1) return -1;
   if (FD_ISSET(s,&wfds)) {
-    int dummy;
+    unsigned int dummy;
     dummy = sizeof(sin);
     if (getpeername(s,(struct sockaddr *) &sin,&dummy) == -1) {
       read(s,&ch,1);

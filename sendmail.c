@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "sgetopt.h"
 #include "substdio.h"
 #include "subfd.h"
@@ -5,22 +6,23 @@
 #include "auto_qmail.h"
 #include "exit.h"
 #include "env.h"
+#include "noreturn.h"
 #include "str.h"
 
-void nomem()
+void _noreturn_ nomem()
 {
   substdio_putsflush(subfderr,"sendmail: fatal: out of memory\n");
   _exit(111);
 }
 
-void die_usage()
+void _noreturn_ die_usage()
 {
   substdio_putsflush(subfderr,"sendmail: usage: sendmail [ -t ] [ -fsender ] [ -Fname ] [ -bp ] [ -bs ] [ arg ... ]\n");
   _exit(100);
 }
 
 char *smtpdarg[] = { "bin/qmail-smtpd", 0 };
-void smtpd()
+void _noreturn_ smtpd()
 {
   if (!env_get("PROTO")) {
     if (!env_put("RELAYCLIENT=")) nomem();
@@ -38,7 +40,7 @@ void smtpd()
 }
 
 char *qreadarg[] = { "bin/qmail-qread", 0 };
-void mailq()
+void _noreturn_ mailq()
 {
   execv(*qreadarg,qreadarg);
   substdio_putsflush(subfderr,"sendmail: fatal: unable to run qmail-qread\n");
@@ -80,9 +82,7 @@ const char *s;
 int flagh;
 char *sender;
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   int opt;
   char **qiargv;
@@ -91,7 +91,7 @@ char **argv;
  
   if (chdir(auto_qmail) == -1) {
     substdio_putsflush(subfderr,"sendmail: fatal: unable to switch to qmail home directory\n");
-    _exit(111);
+    return 111;
   }
 
   flagh = 0;
@@ -138,7 +138,7 @@ char **argv;
 
   if (str_equal(optprogname,"newaliases")) {
     substdio_putsflush(subfderr,"sendmail: fatal: please use fastforward/newaliases instead\n");
-    _exit(100);
+    return 100;
   }
 
   qiargv = (char **) alloc((argc + 10) * sizeof(char *));
@@ -158,5 +158,5 @@ char **argv;
  
   execv(*qiargv,qiargv);
   substdio_putsflush(subfderr,"sendmail: fatal: unable to run qmail-inject\n");
-  _exit(111);
+  return 111;
 }

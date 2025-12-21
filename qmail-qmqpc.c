@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include "substdio.h"
 #include "getln.h"
 #include "readwrite.h"
@@ -34,25 +35,13 @@ void die_format() { _exit(91); }
 int lasterror = 55;
 int qmqpfd;
 
-int saferead(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutread(60,qmqpfd,buf,len);
-  if (r <= 0) die_conn();
-  return r;
-}
-int safewrite(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutwrite(60,qmqpfd,buf,len);
-  if (r <= 0) die_conn();
-  return r;
-}
+GEN_SAFE_TIMEOUTREAD(saferead,60,qmqpfd,die_conn())
+GEN_SAFE_TIMEOUTWRITE(safewrite,60,qmqpfd,die_conn())
 
 char buf[1024];
-substdio to = SUBSTDIO_FDBUF(safewrite,-1,buf,sizeof buf);
-substdio from = SUBSTDIO_FDBUF(saferead,-1,buf,sizeof buf);
-substdio envelope = SUBSTDIO_FDBUF(read,1,buf,sizeof buf);
+substdio to = SUBSTDIO_FDBUF(safewrite,-1,buf,sizeof(buf));
+substdio from = SUBSTDIO_FDBUF(saferead,-1,buf,sizeof(buf));
+substdio envelope = SUBSTDIO_FDBUF(read,1,buf,sizeof(buf));
 /* WARNING: can use only one of these at a time! */
 
 stralloc beforemessage = {0};
@@ -135,7 +124,7 @@ char *server;
 
 stralloc servers = {0};
 
-void
+int
 main()
 {
   int i;
@@ -156,5 +145,5 @@ main()
       i = j + 1;
     }
 
-  _exit(lasterror);
+  return lasterror;
 }

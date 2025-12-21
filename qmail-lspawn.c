@@ -1,4 +1,6 @@
+#include <unistd.h>
 #include "fd.h"
+#include "spawn.h"
 #include "wait.h"
 #include "prot.h"
 #include "substdio.h"
@@ -21,7 +23,6 @@
 char *aliasempty;
 
 uid_t auto_uidp;
-uid_t auto_uidq;
 
 gid_t auto_gidn;
 

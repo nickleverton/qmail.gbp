@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "commands.h"
 #include "fd.h"
 #include "sig.h"
@@ -10,33 +11,21 @@
 #include "now.h"
 #include "fmt.h"
 #include "exit.h"
+#include "noreturn.h"
 #include "readwrite.h"
 #include "timeoutread.h"
 #include "timeoutwrite.h"
 
-void die() { _exit(1); }
+void _noreturn_ die() { _exit(1); }
 
-int saferead(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutread(1200,fd,buf,len);
-  if (r <= 0) die();
-  return r;
-}
-
-int safewrite(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutwrite(1200,fd,buf,len);
-  if (r <= 0) die();
-  return r;
-}
+GEN_SAFE_TIMEOUTREAD(saferead,1200,fd,die())
+GEN_SAFE_TIMEOUTWRITE(safewrite,1200,fd,die())
 
 char ssoutbuf[128];
-substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof ssoutbuf);
+substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
 
 char ssinbuf[128];
-substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
 
 void puts(s) char *s;
 {
@@ -54,11 +43,11 @@ void err(s) char *s;
   flush();
 }
 
-void die_usage() { err("usage: popup hostname subprogram"); die(); }
-void die_nomem() { err("out of memory"); die(); }
-void die_pipe() { err("unable to open pipe"); die(); }
-void die_write() { err("unable to write pipe"); die(); }
-void die_fork() { err("unable to fork"); die(); }
+void _noreturn_ die_usage() { err("usage: popup hostname subprogram"); die(); }
+void _noreturn_ die_nomem() { err("out of memory"); die(); }
+void _noreturn_ die_pipe() { err("unable to open pipe"); die(); }
+void _noreturn_ die_write() { err("unable to write pipe"); die(); }
+void _noreturn_ die_fork() { err("unable to fork"); die(); }
 void die_childcrashed() { err("aack, child crashed"); }
 void die_badauth() { err("authorization failed"); }
 
@@ -67,7 +56,7 @@ void err_wantuser() { err("USER first"); }
 void err_authoriz(arg) char *arg; { err("authorization first"); }
 
 void okay(arg) char *arg; { puts("+OK \r\n"); flush(); }
-void pop3_quit(arg) char *arg; { okay(0); die(); }
+void _noreturn_ pop3_quit(char *arg) { okay(0); die(); }
 
 
 char unique[FMT_ULONG + FMT_ULONG + 3];
@@ -79,10 +68,9 @@ substdio ssup;
 char upbuf[128];
 
 
-void doanddie(user,userlen,pass)
-char *user;
-unsigned int userlen; /* including 0 byte */
-char *pass;
+void _noreturn_ doanddie(char *user,
+                         unsigned int userlen, /* including 0 byte */
+                         char *pass)
 {
   int child;
   int wstat;
@@ -101,7 +89,7 @@ char *pass;
       _exit(1);
   }
   close(pi[0]);
-  substdio_fdbuf(&ssup,write,pi[1],upbuf,sizeof upbuf);
+  substdio_fdbuf(&ssup,write,pi[1],upbuf,sizeof(upbuf));
   if (substdio_put(&ssup,user,userlen) == -1) die_write();
   if (substdio_put(&ssup,pass,str_len(pass) + 1) == -1) die_write();
   if (substdio_puts(&ssup,"<") == -1) die_write();
@@ -111,7 +99,7 @@ char *pass;
   if (substdio_flush(&ssup) == -1) die_write();
   close(pi[1]);
   byte_zero(pass,str_len(pass));
-  byte_zero(upbuf,sizeof upbuf);
+  byte_zero(upbuf,sizeof(upbuf));
   if (wait_pid(&wstat,child) == -1) die();
   if (wait_crashed(wstat)) die_childcrashed();
   if (wait_exitcode(wstat)) die_badauth();
@@ -164,9 +152,7 @@ struct commands pop3commands[] = {
 , { 0, err_authoriz, 0 }
 } ;
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   sig_alarmcatch(die);
   sig_pipeignore();
