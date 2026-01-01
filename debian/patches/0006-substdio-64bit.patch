@@ -1,0 +1,26 @@
+Index: netqmail-1.06-6.2njl/substdio.h
+===================================================================
+--- netqmail-1.06-6.2njl.orig/substdio.h
++++ netqmail-1.06-6.2njl/substdio.h
+@@ -6,7 +6,7 @@ typedef struct substdio {
+   int p;
+   int n;
+   int fd;
+-  int (*op)();
++  ssize_t (*op)();
+ } substdio;
+ 
+ #define SUBSTDIO_FDBUF(op,fd,buf,len) { (buf), 0, (len), (fd), (op) }
+Index: netqmail-1.06-6.2njl/substdio.c
+===================================================================
+--- netqmail-1.06-6.2njl.orig/substdio.c
++++ netqmail-1.06-6.2njl/substdio.c
+@@ -2,7 +2,7 @@
+ 
+ void substdio_fdbuf(s,op,fd,buf,len)
+ register substdio *s;
+-register int (*op)();
++register ssize_t (*op)();
+ register int fd;
+ register char *buf;
+ register int len;

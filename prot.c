@@ -1,21 +1,20 @@
-#include "hasshsgr.h"
 #include "prot.h"
 
-/* XXX: there are more portability problems here waiting to leap out at me */
+#include <sys/types.h>
+#include <grp.h>
+#include <unistd.h>
 
-int prot_gid(gid) int gid;
+int prot_gid(gid_t gid)
 {
-#ifdef HASSHORTSETGROUPS
-  short x[2];
-  x[0] = gid; x[1] = 73; /* catch errors */
-  if (setgroups(1,x) == -1) return -1;
-#else
   if (setgroups(1,&gid) == -1) return -1;
-#endif
+
   return setgid(gid); /* _should_ be redundant, but on some systems it isn't */
 }
 
-int prot_uid(uid) int uid;
+int prot_gids(const char *user, gid_t gid)
 {
-  return setuid(uid);
+  /* member of too many groups */
+  if (initgroups(user, gid) == -1) return -1;
+
+  return setgid(gid); /* _should_ be redundant, but on some systems it isn't */
 }

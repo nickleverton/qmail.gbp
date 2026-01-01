@@ -1,7 +1,12 @@
+#include "dns.h"
+
 #include <stdio.h>
 #include <netdb.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#ifndef BIND_8_COMPAT
+#define BIND_8_COMPAT /* Mac OS X: if Bind 9, Bind 8 compatibility */
+#endif
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <errno.h>
@@ -13,16 +18,19 @@ extern int res_search();
 #include "alloc.h"
 #include "str.h"
 #include "stralloc.h"
-#include "dns.h"
 #include "case.h"
+
+#define MAX_EDNS_RESPONSE_SIZE 65536
 
 static unsigned short getshort(c) unsigned char *c;
 { unsigned short u; u = c[0]; return (u << 8) + c[1]; }
 
-static union { HEADER hdr; unsigned char buf[PACKETSZ]; } response;
+static struct { unsigned char *buf; } response;
+static int responsebuflen = 0;
 static int responselen;
 static unsigned char *responseend;
 static unsigned char *responsepos;
+static unsigned long saveresoptions;
 
 static int numanswers;
 static char name[MAXDNAME];
@@ -43,18 +51,38 @@ int type;
  errno = 0;
  if (!stralloc_copy(&glue,domain)) return DNS_MEM;
  if (!stralloc_0(&glue)) return DNS_MEM;
- responselen = lookup(glue.s,C_IN,type,response.buf,sizeof(response));
+ if (!responsebuflen) {
+  if ((response.buf = malloc(PACKETSZ+1)))
+   responsebuflen = PACKETSZ+1;
+  else return DNS_MEM;
+ }
+
+ responselen = lookup(glue.s,C_IN,type,response.buf,responsebuflen);
+ if ((responselen >= responsebuflen) ||
+     (responselen > 0 && (((HEADER *)response.buf)->tc)))
+  {
+   if (responsebuflen < MAX_EDNS_RESPONSE_SIZE) {
+    unsigned char *newbuf = realloc(response.buf, MAX_EDNS_RESPONSE_SIZE);
+    if (newbuf) {
+     response.buf = newbuf;
+     responsebuflen = MAX_EDNS_RESPONSE_SIZE;
+    }
+    else return DNS_MEM;
+    saveresoptions = _res.options;
+    _res.options |= RES_USEVC;
+    responselen = lookup(glue.s,C_IN,type,response.buf,responsebuflen);
+    _res.options = saveresoptions;
+   }
+  }
  if (responselen <= 0)
   {
    if (errno == ECONNREFUSED) return DNS_SOFT;
    if (h_errno == TRY_AGAIN) return DNS_SOFT;
    return DNS_HARD;
   }
- if (responselen >= sizeof(response))
-   responselen = sizeof(response);
  responseend = response.buf + responselen;
  responsepos = response.buf + sizeof(HEADER);
- n = ntohs(response.hdr.qdcount);
+ n = ntohs(((HEADER *)response.buf)->qdcount);
  while (n-- > 0)
   {
    i = dn_expand(response.buf,responseend,responsepos,name,MAXDNAME);
@@ -64,7 +92,7 @@ int type;
    if (i < QFIXEDSZ) return DNS_SOFT;
    responsepos += QFIXEDSZ;
   }
- numanswers = ntohs(response.hdr.ancount);
+ numanswers = ntohs(((HEADER *)response.buf)->ancount);
  return 0;
 }
 
@@ -184,65 +212,30 @@ int flagsearch;
  if (flagsearch) lookup = res_search;
 }
 
-int dns_cname(sa)
-stralloc *sa;
-{
- int r;
- int loop;
- for (loop = 0;loop < 10;++loop)
-  {
-   if (!sa->len) return loop;
-   if (sa->s[sa->len - 1] == ']') return loop;
-   if (sa->s[sa->len - 1] == '.') { --sa->len; continue; }
-   switch(resolve(sa,T_ANY))
-    {
-     case DNS_MEM: return DNS_MEM;
-     case DNS_SOFT: return DNS_SOFT;
-     case DNS_HARD: return loop;
-     default:
-       while ((r = findname(T_CNAME)) != 2)
-	{
-	 if (r == DNS_SOFT) return DNS_SOFT;
-	 if (r == 1)
-	  {
-	   if (!stralloc_copys(sa,name)) return DNS_MEM;
-	   break;
-	  }
-	}
-       if (r == 2) return loop;
-    }
-  }
- return DNS_HARD; /* alias loop */
-}
-
 #define FMT_IAA 40
 
-static int iaafmt(s,ip)
-char *s;
-struct ip_address *ip;
+static int iaafmt(char *s, struct ip_address *ipa)
 {
  unsigned int i;
  unsigned int len;
  len = 0;
- i = fmt_ulong(s,(unsigned long) ip->d[3]); len += i; if (s) s += i;
+ i = fmt_ulong(s,(unsigned long) ipa->d[3]); len += i; if (s) s += i;
  i = fmt_str(s,"."); len += i; if (s) s += i;
- i = fmt_ulong(s,(unsigned long) ip->d[2]); len += i; if (s) s += i;
+ i = fmt_ulong(s,(unsigned long) ipa->d[2]); len += i; if (s) s += i;
  i = fmt_str(s,"."); len += i; if (s) s += i;
- i = fmt_ulong(s,(unsigned long) ip->d[1]); len += i; if (s) s += i;
+ i = fmt_ulong(s,(unsigned long) ipa->d[1]); len += i; if (s) s += i;
  i = fmt_str(s,"."); len += i; if (s) s += i;
- i = fmt_ulong(s,(unsigned long) ip->d[0]); len += i; if (s) s += i;
+ i = fmt_ulong(s,(unsigned long) ipa->d[0]); len += i; if (s) s += i;
  i = fmt_str(s,".in-addr.arpa."); len += i; if (s) s += i;
  return len;
 }
 
-int dns_ptr(sa,ip)
-stralloc *sa;
-struct ip_address *ip;
+int dns_ptr(stralloc *sa, struct ip_address *ipa)
 {
  int r;
 
- if (!stralloc_ready(sa,iaafmt((char *) 0,ip))) return DNS_MEM;
- sa->len = iaafmt(sa->s,ip);
+ if (!stralloc_ready(sa,iaafmt(NULL,ipa))) return DNS_MEM;
+ sa->len = iaafmt(sa->s,ipa);
  switch(resolve(sa,T_PTR))
   {
    case DNS_MEM: return DNS_MEM;
@@ -261,10 +254,7 @@ struct ip_address *ip;
  return DNS_HARD;
 }
 
-static int dns_ipplus(ia,sa,pref)
-ipalloc *ia;
-stralloc *sa;
-int pref;
+static int dns_ipplus(ipalloc *ia, stralloc *sa, int dpref)
 {
  int r;
  struct ip_mx ix;
@@ -289,7 +279,7 @@ int pref;
  while ((r = findip(T_A)) != 2)
   {
    ix.ip = ip;
-   ix.pref = pref;
+   ix.pref = dpref;
    if (r == DNS_SOFT) return DNS_SOFT;
    if (r == 1)
      if (!ipalloc_append(ia,&ix)) return DNS_MEM;

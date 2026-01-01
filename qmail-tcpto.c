@@ -1,11 +1,14 @@
 /* XXX: this program knows quite a bit about tcpto's internals */
+#include <unistd.h>
 
 #include "substdio.h"
 #include "subfd.h"
 #include "auto_qmail.h"
+#include "byte.h"
 #include "fmt.h"
 #include "ip.h"
 #include "lock.h"
+#include "open.h"
 #include "error.h"
 #include "exit.h"
 #include "datetime.h"
@@ -32,7 +35,7 @@ char tcpto_buf[1024];
 
 char tmp[FMT_ULONG + IPFMT];
 
-void main()
+int main(void)
 {
  int fdlock;
  int fd;

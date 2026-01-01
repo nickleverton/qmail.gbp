@@ -1,3 +1,32 @@
+notqmail (1.09-0~njl12+0) bookworm; urgency=medium
+
+  * New upstream release from notqmail fork.
+  * Update from netqmail-1.06 to notqmail-1.09 and adust/refresh patches:
+    - remove following patches fixed upstream in notqmail:
+      0004-Remote-Code-Execution-in-qmail.diff,
+      qmail-smtpd-usint.patch,
+      compile-include-unistd-h.patch,
+      0005-fix-stdio-stdlib-conflicts.patch.
+    - remove other patches:
+      qmail-1.03-fastremote-3.patch, pending porting;
+      qmail-link-sync.patch, buggy as per #466447
+      0002-qmail-verify.diff and 0003-qmail-verify-optionally-check-aliases,
+        not required in our use case.
+    - re-add old patches omitted from recent local packaging:
+      ext-todo.patch -> notqmail-ext-todo.patch
+    - rename and refresh patches from notqmail branches:
+      netqmail-1.06-authentication-083.patch -> notqmail-smtp-auth.patch
+      netqmail-1.06-tls-20151215.patch -> notqmail-smtp-tls-20231230-1.09.patch
+      0001-qmail-errmsg-logging.diff -> notqmail-smtpd-logging
+        but disable pending porting;
+    - remove binaries of obsolete patches from packaging:
+      maildirwatch, elq, pinq, qail, qsmhook, qmail-verify binary and
+      service, and TODO file #fc0227c2
+    * all upstream docs are now .md format.
+
+
+ -- Nick Leverton <nick@leverton.org>  Thu, 01 Jan 2026 01:57:43 +0000
+
 netqmail (1.06-6.2~njl12.0) bookworm; urgency=medium
 
   * Build for bookworm.

@@ -1,5 +1,8 @@
+#include "maildir.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "prioq.h"
 #include "env.h"
 #include "stralloc.h"
@@ -7,7 +10,6 @@
 #include "datetime.h"
 #include "now.h"
 #include "str.h"
-#include "maildir.h"
 
 struct strerr maildir_chdir_err;
 struct strerr maildir_scan_err;
@@ -36,7 +38,7 @@ stralloc *tmpname;
  dir = opendir("tmp");
  if (!dir) return;
 
- while (d = readdir(dir))
+ while ((d = readdir(dir)))
   {
    if (d->d_name[0] == '.') continue;
    if (!stralloc_copys(tmpname,"tmp/")) break;
@@ -65,7 +67,7 @@ datetime_sec time;
  if (!dir)
    STRERR_SYS3(-1,maildir_scan_err,"unable to scan $MAILDIR/",subdir,": ")
 
- while (d = readdir(dir))
+ while ((d = readdir(dir)))
   {
    if (d->d_name[0] == '.') continue;
    pos = filenames->len;
@@ -95,7 +97,6 @@ int flagcur;
 {
  struct prioq_elt pe;
  datetime_sec time;
- int r;
 
  if (!stralloc_copys(filenames,"")) return 0;
  while (prioq_min(pq,&pe)) prioq_delmin(pq);

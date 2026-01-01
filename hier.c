@@ -1,3 +1,6 @@
+#include "hier.h"
+
+#include <sys/types.h>
 #include "auto_qmail.h"
 #include "auto_split.h"
 #include "auto_uids.h"
@@ -6,10 +9,8 @@
 
 char buf[100 + FMT_ULONG];
 
-void dsplit(base,uid,mode)
-char *base; /* must be under 100 bytes */
-int uid;
-int mode;
+void dsplit(char *base, /* must be under 100 bytes */
+            uid_t uid, int mode)
 {
   char *x;
   unsigned long i;
@@ -25,6 +26,25 @@ int mode;
 
     d(auto_qmail,buf,uid,auto_gidq,mode);
   }
+}
+
+void hier_queue()
+{
+  d(auto_qmail,"queue",auto_uidq,auto_gidq,0750);
+  d(auto_qmail,"queue/pid",auto_uidq,auto_gidq,0700);
+  d(auto_qmail,"queue/intd",auto_uidq,auto_gidq,0700);
+  d(auto_qmail,"queue/todo",auto_uidq,auto_gidq,0750);
+  d(auto_qmail,"queue/bounce",auto_uids,auto_gidq,0700);
+
+  dsplit("queue/mess",auto_uidq,0750);
+  dsplit("queue/info",auto_uids,0700);
+  dsplit("queue/local",auto_uids,0700);
+  dsplit("queue/remote",auto_uids,0700);
+
+  d(auto_qmail,"queue/lock",auto_uidq,auto_gidq,0750);
+  z(auto_qmail,"queue/lock/tcpto",1024,auto_uidr,auto_gidq,0644);
+  z(auto_qmail,"queue/lock/sendmutex",0,auto_uids,auto_gidq,0600);
+  p(auto_qmail,"queue/lock/trigger",auto_uids,auto_gidq,0622);
 }
 
 void hier()
@@ -48,21 +68,7 @@ void hier()
 
   d(auto_qmail,"alias",auto_uida,auto_gidq,02755);
 
-  d(auto_qmail,"queue",auto_uidq,auto_gidq,0750);
-  d(auto_qmail,"queue/pid",auto_uidq,auto_gidq,0700);
-  d(auto_qmail,"queue/intd",auto_uidq,auto_gidq,0700);
-  d(auto_qmail,"queue/todo",auto_uidq,auto_gidq,0750);
-  d(auto_qmail,"queue/bounce",auto_uids,auto_gidq,0700);
-
-  dsplit("queue/mess",auto_uidq,0750);
-  dsplit("queue/info",auto_uids,0700);
-  dsplit("queue/local",auto_uids,0700);
-  dsplit("queue/remote",auto_uids,0700);
-
-  d(auto_qmail,"queue/lock",auto_uidq,auto_gidq,0750);
-  z(auto_qmail,"queue/lock/tcpto",1024,auto_uidr,auto_gidq,0644);
-  z(auto_qmail,"queue/lock/sendmutex",0,auto_uids,auto_gidq,0600);
-  p(auto_qmail,"queue/lock/trigger",auto_uids,auto_gidq,0622);
+  hier_queue();
 
   c(auto_qmail,"boot","home",auto_uido,auto_gidq,0755);
   c(auto_qmail,"boot","home+df",auto_uido,auto_gidq,0755);
@@ -75,29 +81,29 @@ void hier()
   c(auto_qmail,"boot","binm3",auto_uido,auto_gidq,0755);
   c(auto_qmail,"boot","binm3+df",auto_uido,auto_gidq,0755);
 
-  c(auto_qmail,"doc","FAQ",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","UPGRADE",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","SENDMAIL",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL.alias",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL.ctl",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL.ids",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL.maildir",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL.mbox",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","INSTALL.vsm",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","TEST.deliver",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","TEST.receive",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","REMOVE.sendmail",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","REMOVE.binmail",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.local2alias",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.local2ext",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.local2local",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.local2rem",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.local2virt",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.nullclient",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.relaybad",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.relaygood",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"doc","PIC.rem2local",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","FAQ.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","UPGRADE.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","SENDMAIL.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.alias.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.ctl.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.ids.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.maildir.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.mbox.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","INSTALL.vsm.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","TEST.deliver.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","TEST.receive.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","REMOVE.sendmail.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","REMOVE.binmail.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.local2alias.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.local2ext.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.local2local.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.local2rem.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.local2virt.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.nullclient.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.relaybad.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.relaygood.md",auto_uido,auto_gidq,0644);
+  c(auto_qmail,"doc","PIC.rem2local.md",auto_uido,auto_gidq,0644);
 
   c(auto_qmail,"bin","qmail-queue",auto_uidq,auto_gidq,04711);
   c(auto_qmail,"bin","qmail-lspawn",auto_uido,auto_gidq,0700);
@@ -130,7 +136,6 @@ void hier()
   c(auto_qmail,"bin","sendmail",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","tcp-env",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","qreceipt",auto_uido,auto_gidq,0755);
-  c(auto_qmail,"bin","qsmhook",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","qbiff",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","forward",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","preline",auto_uido,auto_gidq,0755);
@@ -139,10 +144,6 @@ void hier()
   c(auto_qmail,"bin","except",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","maildirmake",auto_uido,auto_gidq,0755);
   c(auto_qmail,"bin","maildir2mbox",auto_uido,auto_gidq,0755);
-  c(auto_qmail,"bin","maildirwatch",auto_uido,auto_gidq,0755);
-  c(auto_qmail,"bin","qail",auto_uido,auto_gidq,0755);
-  c(auto_qmail,"bin","elq",auto_uido,auto_gidq,0755);
-  c(auto_qmail,"bin","pinq",auto_uido,auto_gidq,0755);
 
   c(auto_qmail,"man/man5","addresses.5",auto_uido,auto_gidq,0644);
   c(auto_qmail,"man/cat5","addresses.0",auto_uido,auto_gidq,0644);
@@ -184,8 +185,6 @@ void hier()
   c(auto_qmail,"man/cat1","maildirmake.0",auto_uido,auto_gidq,0644);
   c(auto_qmail,"man/man1","maildir2mbox.1",auto_uido,auto_gidq,0644);
   c(auto_qmail,"man/cat1","maildir2mbox.0",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"man/man1","maildirwatch.1",auto_uido,auto_gidq,0644);
-  c(auto_qmail,"man/cat1","maildirwatch.0",auto_uido,auto_gidq,0644);
   c(auto_qmail,"man/man1","mailsubj.1",auto_uido,auto_gidq,0644);
   c(auto_qmail,"man/cat1","mailsubj.0",auto_uido,auto_gidq,0644);
   c(auto_qmail,"man/man1","qreceipt.1",auto_uido,auto_gidq,0644);

@@ -1,29 +1,48 @@
 #ifndef SUBSTDIO_H
 #define SUBSTDIO_H
 
+#include <string.h>
+#include <sys/types.h>
+
+#include "deprecated.h"
+
 typedef struct substdio {
   char *x;
   int p;
   int n;
   int fd;
-  int (*op)();
+  ssize_t (*op)();
 } substdio;
 
-#define SUBSTDIO_FDBUF(op,fd,buf,len) { (buf), 0, (len), (fd), (op) }
+#define SUBSTDIO_FDBUF(o,f,buf,len) { (buf), 0, (len), (f), (o) }
 
-extern void substdio_fdbuf();
+extern void substdio_fdbuf(substdio *s, ssize_t (*op)(), int fd, char *buf, int len);
 
-extern int substdio_flush();
-extern int substdio_put();
-extern int substdio_bput();
-extern int substdio_putflush();
-extern int substdio_puts();
-extern int substdio_bputs();
-extern int substdio_putsflush();
+extern int substdio_flush(substdio *s);
+extern int substdio_put(substdio *s, const char *buf, size_t len);
+extern int substdio_bput(substdio *s, const char *buf, size_t len);
+extern int substdio_putflush(substdio *s, const char *buf, size_t len);
 
-extern int substdio_get();
-extern int substdio_bget();
-extern int substdio_feed();
+static inline int substdio_puts(substdio *s, const char *buf)
+{
+  return substdio_put(s, buf, strlen(buf));
+}
+
+static inline int substdio_bputs(substdio *s, const char *buf)
+{
+  return substdio_bput(s, buf, strlen(buf));
+}
+
+static inline int substdio_putsflush(substdio *s, const char *buf)
+{
+  return substdio_putflush(s, buf, strlen(buf));
+}
+
+extern ssize_t substdio_get(substdio *s, char *buf, size_t len);
+#ifdef DEPRECATED_FUNCTIONS_AVAILABLE
+extern ssize_t substdio_bget(substdio *s, char *buf, size_t len);
+#endif
+extern ssize_t substdio_feed(substdio *s);
 
 extern char *substdio_peek();
 extern void substdio_seek();

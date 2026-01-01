@@ -1,15 +1,20 @@
+#include <sys/stat.h>
+#include <unistd.h>
 #include "fd.h"
 #include "prot.h"
 #include "exit.h"
 #include "fork.h"
+#include "noreturn.h"
+#include "uidgid.h"
 #include "auto_uids.h"
+#include "auto_users.h"
 
 char *(qsargs[]) = { "qmail-send", 0 };
 char *(qcargs[]) = { "qmail-clean", 0 };
 char *(qlargs[]) = { "qmail-lspawn", "./Mailbox", 0 };
 char *(qrargs[]) = { "qmail-rspawn", 0 };
 
-void die() { _exit(111); }
+void _noreturn_ die() { _exit(111); }
 
 int pi0[2];
 int pi1[2];
@@ -19,6 +24,14 @@ int pi4[2];
 int pi5[2];
 int pi6[2];
 
+uid_t auto_uidl;
+uid_t auto_uidq;
+uid_t auto_uidr;
+uid_t auto_uids;
+
+gid_t auto_gidn;
+gid_t auto_gidq;
+
 void close23456() { close(2); close(3); close(4); close(5); close(6); }
 
 void closepipes() {
@@ -27,12 +40,19 @@ void closepipes() {
   close(pi5[0]); close(pi5[1]); close(pi6[0]); close(pi6[1]);
 }
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   if (chdir("/") == -1) die();
   umask(077);
+
+  auto_uidl = inituid(auto_userl);
+  auto_uidq = inituid(auto_userq);
+  auto_uidr = inituid(auto_userr);
+  auto_uids = inituid(auto_users);
+
+  auto_gidn = initgid(auto_groupn);
+  auto_gidq = initgid(auto_groupq);
+
   if (prot_gid(auto_gidq) == -1) die();
 
   if (fd_copy(2,0) == -1) die();
@@ -85,6 +105,7 @@ char **argv;
   switch(fork()) {
     case -1: die();
     case 0:
+      if (prot_gids(auto_userr, auto_gidq) == -1) die();
       if (prot_uid(auto_uidr) == -1) die();
       if (fd_copy(0,pi3[0]) == -1) die();
       if (fd_copy(1,pi4[1]) == -1) die();

@@ -10,11 +10,7 @@ struct cdbmake *cdbm;
   cdbm->numentries = 0;
 }
 
-int cdbmake_add(cdbm,h,p,alloc)
-struct cdbmake *cdbm;
-uint32 h;
-uint32 p;
-char *(*alloc)();
+int cdbmake_add(struct cdbmake *cdbm, uint32 h, uint32 p)
 {
   struct cdbmake_hplist *head;
 
@@ -33,9 +29,7 @@ char *(*alloc)();
   return 1;
 }
 
-int cdbmake_split(cdbm,alloc)
-struct cdbmake *cdbm;
-char *(*alloc)();
+int cdbmake_split(struct cdbmake *cdbm)
 {
   int i;
   uint32 u;

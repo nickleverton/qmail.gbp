@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "sig.h"
 #include "readwrite.h"
 #include "stralloc.h"
@@ -5,6 +6,7 @@
 #include "alloc.h"
 #include "auto_qmail.h"
 #include "control.h"
+#include "datetime.h"
 #include "received.h"
 #include "constmap.h"
 #include "error.h"
@@ -28,16 +30,10 @@
 unsigned int databytes = 0;
 int timeout = 1200;
 
-int safewrite(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutwrite(timeout,fd,buf,len);
-  if (r <= 0) _exit(1);
-  return r;
-}
+GEN_SAFE_TIMEOUTWRITE(safewrite,timeout,fd,_exit(1))
 
 char ssoutbuf[512];
-substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof ssoutbuf);
+substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
 
 void flush() { substdio_flush(&ssout); }
 void out(s) char *s; { substdio_puts(&ssout,s); }
@@ -47,7 +43,7 @@ void die_alarm() { out("451 timeout (#4.4.2)\r\n"); flush(); _exit(1); }
 void die_nomem() { out("421 out of memory (#4.3.0)\r\n"); flush(); _exit(1); }
 void die_control() { out("421 unable to read controls (#4.3.0)\r\n"); flush(); _exit(1); }
 void die_ipme() { out("421 unable to figure out my IP addresses (#4.3.0)\r\n"); flush(); _exit(1); }
-void straynewline() { out("451 See http://pobox.com/~djb/docs/smtplf.html.\r\n"); flush(); _exit(1); }
+void straynewline() { out("451 See https://cr.yp.to/docs/smtplf.html.\r\n"); flush(); _exit(1); }
 
 void err_bmf() { out("553 sorry, your envelope sender is in my badmailfrom list (#5.7.1)\r\n"); }
 void err_nogateway() { out("553 sorry, that domain isn't in my list of allowed rcpthosts (#5.7.1)\r\n"); }
@@ -69,7 +65,7 @@ void smtp_greet(code) char *code;
 }
 void smtp_help(arg) char *arg;
 {
-  out("214 netqmail home page: http://qmail.org/netqmail\r\n");
+  out("214 notqmail home page: https://notqmail.org\r\n");
 }
 void smtp_quit(arg) char *arg;
 {
@@ -103,9 +99,9 @@ void setup()
   unsigned long u;
  
   if (control_init() == -1) die_control();
-  if (control_rldef(&greeting,"control/smtpgreeting",1,(char *) 0) != 1)
+  if (control_rldef(&greeting,"control/smtpgreeting",1,NULL) != 1)
     die_control();
-  liphostok = control_rldef(&liphost,"control/localiphost",1,(char *) 0);
+  liphostok = control_rldef(&liphost,"control/localiphost",1,NULL);
   if (liphostok == -1) die_control();
   if (control_readint(&timeout,"control/timeoutsmtpd") == -1) die_control();
   if (timeout <= 0) timeout = 1;
@@ -164,7 +160,7 @@ char *arg;
   if (!stralloc_copys(&addr,"")) die_nomem();
   flagesc = 0;
   flagquoted = 0;
-  for (i = 0;ch = arg[i];++i) { /* copy arg to addr, stripping quotes */
+  for (i = 0;(ch = arg[i]);++i) { /* copy arg to addr, stripping quotes */
     if (flagesc) {
       if (!stralloc_append(&addr,&ch)) die_nomem();
       flagesc = 0;
@@ -264,19 +260,18 @@ void smtp_rcpt(arg) char *arg; {
   out("250 ok\r\n");
 }
 
-
-int saferead(fd,buf,len) int fd; char *buf; int len;
+ssize_t saferead(int fd, void *buf, size_t len)
 {
-  int r;
+  ssize_t r;
   flush();
   r = timeoutread(timeout,fd,buf,len);
   if (r == -1) if (errno == error_timeout) die_alarm();
-  if (r <= 0) die_read();
+  if (r == 0 || r == -1) die_read();
   return r;
 }
 
 char ssinbuf[1024];
-substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
 
 struct qmail qqt;
 unsigned int bytestooverflow = 0;
@@ -408,7 +403,7 @@ struct commands smtpcommands[] = {
 , { 0, err_unimpl, flush }
 } ;
 
-void main()
+int main(void)
 {
   sig_pipeignore();
   if (chdir(auto_qmail) == -1) die_control();

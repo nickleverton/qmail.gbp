@@ -1,11 +1,7 @@
 datemail
-elq
 maildir2mbox
 maildirmake
-maildirwatch
 mailsubj
-pinq
-qail
 qmail-inject
 qmail-showctl
 qmail-tcpto
@@ -14,7 +10,6 @@ splogger
 predate
 tcp-env
 qreceipt
-qsmhook
 qbiff
 forward
 preline

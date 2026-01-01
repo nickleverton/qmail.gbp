@@ -62,12 +62,12 @@ install-arch: deb-checkdir deb-checkuid build-stamp
 	./install
 	./instcheck
 	for i in bouncesaying condredirect except forward maildir2mbox \
-	 maildirmake maildirwatch predate preline qbiff qmail-clean \
+	 maildirmake predate preline qbiff qmail-clean \
 	 qmail-getpw qmail-inject qmail-local qmail-lspawn qmail-newmrh \
 	 qmail-newu qmail-pop3d qmail-popup qmail-pw2u qmail-qmqpc \
 	 qmail-qmqpd qmail-qmtpd qmail-qread qmail-queue qmail-remote \
 	 qmail-rspawn qmail-send qmail-showctl qmail-smtpd qmail-start \
-	 qmail-tcpok qmail-tcpto qreceipt qsmhook sendmail splogger tcp-env; \
+	 qmail-tcpok qmail-tcpto qreceipt sendmail splogger tcp-env; \
 	  do $(STRIP) -R .comment -R .note '$(DIR)'/var/lib/qmail/bin/$$i \
 	    || exit 1; \
 	done

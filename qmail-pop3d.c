@@ -1,5 +1,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "commands.h"
 #include "sig.h"
 #include "getln.h"
@@ -19,27 +22,19 @@
 
 void die() { _exit(0); }
 
-int saferead(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutread(1200,fd,buf,len);
-  if (r <= 0) die();
-  return r;
-}
+extern int rename(const char *, const char *);
 
-int safewrite(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutwrite(1200,fd,buf,len);
-  if (r <= 0) die();
-  return r;
-}
+GEN_SAFE_TIMEOUTREAD(saferead,1200,fd,die())
+GEN_SAFE_TIMEOUTWRITE(safewrite,1200,fd,die())
+
+char sserrbuf[128];
+substdio sserr = SUBSTDIO_FDBUF(safewrite,2,sserrbuf,sizeof(sserrbuf));
 
 char ssoutbuf[1024];
-substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof ssoutbuf);
+substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
 
 char ssinbuf[128];
-substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof ssinbuf);
+substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
 
 void put(buf,len) char *buf; int len;
 {
@@ -63,6 +58,10 @@ void err(s) char *s;
 
 void die_nomem() { err("out of memory"); die(); }
 void die_nomaildir() { err("this user has no $HOME/Maildir"); die(); }
+void die_root() {
+  substdio_putsflush(&sserr,"qmail-pop3d invoked as uid 0, terminating\n");
+  _exit(1);
+}
 void die_scan() { err("unable to scan $HOME/Maildir"); die(); }
 
 void err_syntax() { err("syntax error"); }
@@ -117,7 +116,7 @@ struct message {
   unsigned long size;
   char *fn;
 } *m;
-int numm;
+unsigned int numm;
 
 int last = 0;
 
@@ -125,13 +124,13 @@ void getlist()
 {
   struct prioq_elt pe;
   struct stat st;
-  int i;
+  unsigned int i;
  
   maildir_clean(&line);
   if (maildir_scan(&pq,&filenames,1,1) == -1) die_scan();
  
   numm = pq.p ? pq.len : 0;
-  m = (struct message *) alloc(numm * sizeof(struct message));
+  m = calloc(numm, sizeof(struct message));
   if (!m) die_nomem();
  
   for (i = 0;i < numm;++i) {
@@ -148,7 +147,7 @@ void getlist()
 
 void pop3_stat(arg) char *arg;
 {
-  int i;
+  unsigned int i;
   unsigned long total;
  
   total = 0;
@@ -163,7 +162,7 @@ void pop3_stat(arg) char *arg;
 
 void pop3_rset(arg) char *arg;
 {
-  int i;
+  unsigned int i;
   for (i = 0;i < numm;++i) m[i].flagdeleted = 0;
   last = 0;
   okay(0);
@@ -179,7 +178,7 @@ void pop3_last(arg) char *arg;
 
 void pop3_quit(arg) char *arg;
 {
-  int i;
+  unsigned int i;
   for (i = 0;i < numm;++i)
     if (m[i].flagdeleted) {
       if (unlink(m[i].fn) == -1) err_nounlink();
@@ -202,7 +201,7 @@ int msgno(arg) char *arg;
   if (!scan_ulong(arg,&u)) { err_syntax(); return -1; }
   if (!u) { err_nozero(); return -1; }
   --u;
-  if (u >= numm) { err_toobig(); return -1; }
+  if (u >= numm || u >= INT_MAX) { err_toobig(); return -1; }
   if (m[u].flagdeleted) { err_deleted(); return -1; }
   return u;
 }
@@ -287,13 +286,12 @@ struct commands pop3commands[] = {
 , { 0, err_unimpl, 0 }
 } ;
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   sig_alarmcatch(die);
   sig_pipeignore();
  
+  if (!getuid()) die_root();
   if (!argv[1]) die_nomaildir();
   if (chdir(argv[1]) == -1) die_nomaildir();
  

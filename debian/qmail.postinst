@@ -52,7 +52,7 @@ if update-service --check qmail-send; then
   echo 'Restarting qmail-send...'
   svc -t /etc/service/qmail-send
 fi
-if update-service --check qmail-verify; then 
-  echo 'Restarting qmail-verify...'
-  svc -t /etc/service/qmail-verify
-fi
+#if update-service --check qmail-verify; then 
+#  echo 'Restarting qmail-verify...'
+#  svc -t /etc/service/qmail-verify
+#fi

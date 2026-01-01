@@ -1,4 +1,6 @@
+#include <unistd.h>
 #include "fd.h"
+#include "spawn.h"
 #include "wait.h"
 #include "prot.h"
 #include "substdio.h"
@@ -7,14 +9,22 @@
 #include "exit.h"
 #include "fork.h"
 #include "error.h"
+#include "byte.h"
 #include "cdb.h"
 #include "case.h"
+#include "open.h"
 #include "slurpclose.h"
+#include "uidgid.h"
 #include "auto_qmail.h"
 #include "auto_uids.h"
+#include "auto_users.h"
 #include "qlx.h"
 
 char *aliasempty;
+
+uid_t auto_uidp;
+
+gid_t auto_gidn;
 
 void initialize(argc,argv)
 int argc;
@@ -22,6 +32,11 @@ char **argv;
 {
   aliasempty = argv[1];
   if (!aliasempty) _exit(100);
+
+  auto_uidp = inituid(auto_userp);
+  auto_uidq = inituid(auto_userq);
+
+  auto_gidn = initgid(auto_groupn);
 }
 
 int truncreport = 3000;
@@ -142,7 +157,7 @@ char *local;
  args[0] = "bin/qmail-getpw";
  args[1] = local;
  args[2] = 0;
- switch(gpwpid = vfork())
+ switch(gpwpid = fork())
   {
    case -1:
      _exit(QLX_SYS);
@@ -176,8 +191,8 @@ char *s; char *r; int at;
    char *(args[11]);
    unsigned long u;
    int n;
-   int uid;
-   int gid;
+   uid_t uid;
+   gid_t gid;
    char *x;
    unsigned int xlen;
    

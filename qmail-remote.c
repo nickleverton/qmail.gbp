@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include "sig.h"
 #include "stralloc.h"
 #include "substdio.h"
@@ -12,7 +13,6 @@
 #include "auto_qmail.h"
 #include "control.h"
 #include "dns.h"
-#include "alloc.h"
 #include "quote.h"
 #include "ip.h"
 #include "ipalloc.h"
@@ -23,6 +23,7 @@
 #include "now.h"
 #include "exit.h"
 #include "constmap.h"
+#include "noreturn.h"
 #include "tcpto.h"
 #include "readwrite.h"
 #include "timeoutconn.h"
@@ -35,7 +36,7 @@
 unsigned long port = PORT_SMTP;
 
 GEN_ALLOC_typedef(saa,stralloc,sa,len,a)
-GEN_ALLOC_readyplus(saa,stralloc,sa,len,a,i,n,x,10,saa_readyplus)
+GEN_ALLOC_readyplus(saa,stralloc,sa,len,a,10,saa_readyplus)
 static stralloc sauninit = {0};
 
 stralloc helohost = {0};
@@ -50,38 +51,38 @@ struct ip_address partner;
 
 void out(s) char *s; { if (substdio_puts(subfdoutsmall,s) == -1) _exit(0); }
 void zero() { if (substdio_put(subfdoutsmall,"\0",1) == -1) _exit(0); }
-void zerodie() { zero(); substdio_flush(subfdoutsmall); _exit(0); }
+void _noreturn_ zerodie() { zero(); substdio_flush(subfdoutsmall); _exit(0); }
 void outsafe(sa) stralloc *sa; { int i; char ch;
 for (i = 0;i < sa->len;++i) {
 ch = sa->s[i]; if (ch < 33) ch = '?'; if (ch > 126) ch = '?';
 if (substdio_put(subfdoutsmall,&ch,1) == -1) _exit(0); } }
 
-void temp_nomem() { out("ZOut of memory. (#4.3.0)\n"); zerodie(); }
-void temp_oserr() { out("Z\
+void _noreturn_ temp_nomem() { out("ZOut of memory. (#4.3.0)\n"); zerodie(); }
+void _noreturn_ temp_oserr() { out("Z\
 System resources temporarily unavailable. (#4.3.0)\n"); zerodie(); }
-void temp_noconn() { out("Z\
+void _noreturn_ temp_noconn() { out("Z\
 Sorry, I wasn't able to establish an SMTP connection. (#4.4.1)\n"); zerodie(); }
-void temp_read() { out("ZUnable to read message. (#4.3.0)\n"); zerodie(); }
-void temp_dnscanon() { out("Z\
+void _noreturn_ temp_read() { out("ZUnable to read message. (#4.3.0)\n"); zerodie(); }
+void _noreturn_ temp_dnscanon() { out("Z\
 CNAME lookup failed temporarily. (#4.4.3)\n"); zerodie(); }
-void temp_dns() { out("Z\
+void _noreturn_ temp_dns() { out("Z\
 Sorry, I couldn't find any host by that name. (#4.1.2)\n"); zerodie(); }
-void temp_chdir() { out("Z\
+void _noreturn_ temp_chdir() { out("Z\
 Unable to switch to home directory. (#4.3.0)\n"); zerodie(); }
-void temp_control() { out("Z\
+void _noreturn_ temp_control() { out("Z\
 Unable to read control files. (#4.3.0)\n"); zerodie(); }
-void perm_partialline() { out("D\
+void _noreturn_ perm_partialline() { out("D\
 SMTP cannot transfer messages with partial final lines. (#5.6.2)\n"); zerodie(); }
-void perm_usage() { out("D\
+void _noreturn_ perm_usage() { out("D\
 I (qmail-remote) was invoked improperly. (#5.3.5)\n"); zerodie(); }
-void perm_dns() { out("D\
+void _noreturn_ perm_dns() { out("D\
 Sorry, I couldn't find any host named ");
 outsafe(&host);
 out(". (#5.1.2)\n"); zerodie(); }
-void perm_nomx() { out("D\
+void _noreturn_ perm_nomx() { out("D\
 Sorry, I couldn't find a mail exchanger or IP address. (#5.4.4)\n");
 zerodie(); }
-void perm_ambigmx() { out("D\
+void _noreturn_ perm_ambigmx() { out("D\
 Sorry. Although I'm listed as a best-preference MX or A for that host,\n\
 it isn't in my control/locals file, so I don't treat it as local. (#5.4.6)\n");
 zerodie(); }
@@ -94,7 +95,7 @@ void outhost()
 
 int flagcritical = 0;
 
-void dropped() {
+void _noreturn_ dropped() {
   out("ZConnected to ");
   outhost();
   out(" but connection died. ");
@@ -107,33 +108,21 @@ int timeoutconnect = 60;
 int smtpfd;
 int timeout = 1200;
 
-int saferead(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutread(timeout,smtpfd,buf,len);
-  if (r <= 0) dropped();
-  return r;
-}
-int safewrite(fd,buf,len) int fd; char *buf; int len;
-{
-  int r;
-  r = timeoutwrite(timeout,smtpfd,buf,len);
-  if (r <= 0) dropped();
-  return r;
-}
+GEN_SAFE_TIMEOUTREAD(saferead,timeout,smtpfd,dropped())
+GEN_SAFE_TIMEOUTWRITE(safewrite,timeout,smtpfd,dropped())
 
 char inbuf[1024];
-substdio ssin = SUBSTDIO_FDBUF(read,0,inbuf,sizeof inbuf);
+substdio ssin = SUBSTDIO_FDBUF(read,0,inbuf,sizeof(inbuf));
 char smtptobuf[1024];
-substdio smtpto = SUBSTDIO_FDBUF(safewrite,-1,smtptobuf,sizeof smtptobuf);
+substdio smtpto = SUBSTDIO_FDBUF(safewrite,-1,smtptobuf,sizeof(smtptobuf));
 char smtpfrombuf[128];
-substdio smtpfrom = SUBSTDIO_FDBUF(saferead,-1,smtpfrombuf,sizeof smtpfrombuf);
+substdio smtpfrom = SUBSTDIO_FDBUF(saferead,-1,smtpfrombuf,sizeof(smtpfrombuf));
 
 stralloc smtptext = {0};
 
-void get(ch)
-char *ch;
+static void get(unsigned char *uc)
 {
+  char *ch = (char *)uc;
   substdio_get(&smtpfrom,ch,1);
   if (*ch != '\r')
     if (smtptext.len < HUGESMTPTEXT)
@@ -201,6 +190,16 @@ void blast()
     if (ch == '.')
       substdio_put(&smtpto,".",1);
     while (ch != '\n') {
+      if (ch == '\r') {
+        r = substdio_get(&ssin, &ch, 1);
+        if (r == 0)
+          break;
+        if (r == -1) temp_read();
+        if (ch != '\n') {
+          substdio_put(&smtpto, "\r\n", 2);
+        } else
+          break;
+      }
       substdio_put(&smtpto,&ch,1);
       r = substdio_get(&ssin,&ch,1);
       if (r == 0) perm_partialline();
@@ -276,15 +275,9 @@ void smtp()
 stralloc canonhost = {0};
 stralloc canonbox = {0};
 
-void addrmangle(saout,s,flagalias,flagcname)
-stralloc *saout; /* host has to be canonical, box has to be quoted */
-char *s;
-int *flagalias;
-int flagcname;
+void addrmangle(stralloc *saout, char *s)
 {
   int j;
- 
-  *flagalias = flagcname;
  
   j = str_rchr(s,'@');
   if (!s[j]) {
@@ -293,17 +286,11 @@ int flagcname;
   }
   if (!stralloc_copys(&canonbox,s)) temp_nomem();
   canonbox.len = j;
+  /* box has to be quoted */
   if (!quote(saout,&canonbox)) temp_nomem();
   if (!stralloc_cats(saout,"@")) temp_nomem();
  
   if (!stralloc_copys(&canonhost,s + j + 1)) temp_nomem();
-  if (flagcname)
-    switch(dns_cname(&canonhost)) {
-      case 0: *flagalias = 0; break;
-      case DNS_MEM: temp_nomem();
-      case DNS_SOFT: temp_dnscanon();
-      case DNS_HARD: ; /* alias loop, not our problem */
-    }
 
   if (!stralloc_cat(saout,&canonhost)) temp_nomem();
 }
@@ -314,7 +301,7 @@ void getcontrols()
   if (control_readint(&timeout,"control/timeoutremote") == -1) temp_control();
   if (control_readint(&timeoutconnect,"control/timeoutconnect") == -1)
     temp_control();
-  if (control_rldef(&helohost,"control/helohost",1,(char *) 0) != 1)
+  if (control_rldef(&helohost,"control/helohost",1,NULL) != 1)
     temp_control();
   switch(control_readfile(&routes,"control/smtproutes",0)) {
     case -1:
@@ -326,17 +313,13 @@ void getcontrols()
   }
 }
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   static ipalloc ip = {0};
   int i;
   unsigned long random;
   char **recips;
   unsigned long prefme;
-  int flagallaliases;
-  int flagalias;
   char *relayhost;
  
   sig_pipeignore();
@@ -350,7 +333,7 @@ char **argv;
   relayhost = 0;
   for (i = 0;i <= host.len;++i)
     if ((i == 0) || (i == host.len) || (host.s[i] == '.'))
-      if (relayhost = constmap(&maproutes,host.s + i,host.len - i))
+      if ((relayhost = constmap(&maproutes,host.s + i,host.len - i)))
         break;
   if (relayhost && !*relayhost) relayhost = 0;
  
@@ -364,18 +347,16 @@ char **argv;
   }
 
 
-  addrmangle(&sender,argv[2],&flagalias,0);
+  addrmangle(&sender,argv[2]);
  
   if (!saa_readyplus(&reciplist,0)) temp_nomem();
   if (ipme_init() != 1) temp_oserr();
  
-  flagallaliases = 1;
   recips = argv + 3;
   while (*recips) {
     if (!saa_readyplus(&reciplist,1)) temp_nomem();
     reciplist.sa[reciplist.len] = sauninit;
-    addrmangle(reciplist.sa + reciplist.len,*recips,&flagalias,!relayhost);
-    if (!flagalias) flagallaliases = 0;
+    addrmangle(reciplist.sa + reciplist.len,*recips);
     ++reciplist.len;
     ++recips;
   }
@@ -399,7 +380,6 @@ char **argv;
         prefme = ip.ix[i].pref;
  
   if (relayhost) prefme = 300000;
-  if (flagallaliases) prefme = 500000;
  
   for (i = 0;i < ip.len;++i)
     if (ip.ix[i].pref < prefme)

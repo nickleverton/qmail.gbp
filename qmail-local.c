@@ -1,9 +1,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "readwrite.h"
 #include "sig.h"
 #include "env.h"
 #include "byte.h"
+#include "datetime.h"
 #include "exit.h"
 #include "fork.h"
 #include "open.h"
@@ -29,16 +32,16 @@
 #include "gfrom.h"
 #include "auto_patrn.h"
 
-void usage() { strerr_die1x(100,"qmail-local: usage: qmail-local [ -nN ] user homedir local dash ext domain sender aliasempty"); }
+void _noreturn_ usage() { strerr_die1x(100,"qmail-local: usage: qmail-local [ -nN ] user homedir local dash ext domain sender aliasempty"); }
 
-void temp_nomem() { strerr_die1x(111,"Out of memory. (#4.3.0)"); }
-void temp_rewind() { strerr_die1x(111,"Unable to rewind message. (#4.3.0)"); }
-void temp_childcrashed() { strerr_die1x(111,"Aack, child crashed. (#4.3.0)"); }
-void temp_fork() { strerr_die3x(111,"Unable to fork: ",error_str(errno),". (#4.3.0)"); }
-void temp_read() { strerr_die3x(111,"Unable to read message: ",error_str(errno),". (#4.3.0)"); }
-void temp_slowlock()
+void _noreturn_ temp_nomem() { strerr_die1x(111,"Out of memory. (#4.3.0)"); }
+void _noreturn_ temp_rewind() { strerr_die1x(111,"Unable to rewind message. (#4.3.0)"); }
+void _noreturn_ temp_childcrashed() { strerr_die1x(111,"Aack, child crashed. (#4.3.0)"); }
+void _noreturn_ temp_fork() { strerr_die3x(111,"Unable to fork: ",error_str(errno),". (#4.3.0)"); }
+void _noreturn_ temp_read() { strerr_die3x(111,"Unable to read message: ",error_str(errno),". (#4.3.0)"); }
+void _noreturn_ temp_slowlock()
 { strerr_die1x(111,"File has been locked for 30 seconds straight. (#4.3.0)"); }
-void temp_qmail(fn) char *fn;
+void _noreturn_ temp_qmail(char *fn)
 { strerr_die5x(111,"Unable to open ",fn,": ",error_str(errno),". (#4.3.0)"); }
 
 int flagdoit;
@@ -79,10 +82,9 @@ char *dir;
 {
  unsigned long pid;
  unsigned long time;
- char host[64];
+ char myhost[64];
  char *s;
  int loop;
- struct stat st;
  int fd;
  substdio ss;
  substdio ssout;
@@ -90,8 +92,8 @@ char *dir;
  sig_alarmcatch(sigalrm);
  if (chdir(dir) == -1) { if (error_temp(errno)) _exit(1); _exit(2); }
  pid = getpid();
- host[0] = 0;
- gethostname(host,sizeof(host));
+ myhost[0] = 0;
+ gethostname(myhost,sizeof(myhost));
  for (loop = 0;;++loop)
   {
    time = now();
@@ -99,18 +101,21 @@ char *dir;
    s += fmt_str(s,"tmp/");
    s += fmt_ulong(s,time); *s++ = '.';
    s += fmt_ulong(s,pid); *s++ = '.';
-   s += fmt_strn(s,host,sizeof(host)); *s++ = 0;
-   if (stat(fntmptph,&st) == -1) if (errno == error_noent) break;
-   /* really should never get to this point */
-   if (loop == 2) _exit(1);
-   sleep(2);
+   s += fmt_strn(s,myhost,sizeof(myhost)); *s++ = 0;
+   alarm(86400);
+   fd = open_excl(fntmptph);
+   if (fd >= 0)
+     break;
+   if (errno == error_exist) {
+     /* really should never get to this point */
+     if (loop == 2) _exit(1);
+     sleep(2);
+   } else {
+     _exit(1);
+   }
   }
  str_copy(fnnewtph,fntmptph);
  byte_copy(fnnewtph,3,"new");
-
- alarm(86400);
- fd = open_excl(fntmptph);
- if (fd == -1) _exit(1);
 
  substdio_fdbuf(&ss,read,0,buf,sizeof(buf));
  substdio_fdbuf(&ssout,write,fd,outbuf,sizeof(outbuf));
@@ -316,11 +321,12 @@ void checkhome()
    strerr_die3x(111,"Unable to stat home directory: ",error_str(errno),". (#4.3.0)");
  if (st.st_mode & auto_patrn)
    strerr_die1x(111,"Uh-oh: home directory is writable. (#4.7.0)");
- if (st.st_mode & 01000)
+ if (st.st_mode & 01000) {
    if (flagdoit)
      strerr_die1x(111,"Home directory is sticky: user is editing his .qmail file. (#4.2.1)");
    else
      strerr_warn1("Warning: home directory is sticky.",0);
+ }
 }
 
 int qmeox(dashowner)
@@ -388,7 +394,7 @@ int *cutable;
   if (qmeexists(fd,cutable)) {
     if (safeext.len >= 7) {
       i = safeext.len - 7;
-      if (!byte_diff("default",7,safeext.s + i))
+      if (byte_equal("default",7,safeext.s + i))
 	if (i <= str_len(ext)) /* paranoia */
 	  if (!env_put2("DEFAULT",ext + i)) temp_nomem();
     }
@@ -434,26 +440,20 @@ void count_print()
  substdio_flush(subfdoutsmall);
 }
 
-void sayit(type,cmd,len)
-char *type;
-char *cmd;
-int len;
+void sayit(char *type, char *cmd, unsigned int len)
 {
  substdio_puts(subfdoutsmall,type);
  substdio_put(subfdoutsmall,cmd,len);
  substdio_putsflush(subfdoutsmall,"\n");
 }
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
  int opt;
- int i;
- int j;
- int k;
+ unsigned int i;
+ unsigned int j;
  int fd;
- int numforward;
+ unsigned int numforward;
  char **recips;
  datetime_sec starttime;
  int flagforwardonly;
@@ -531,7 +531,8 @@ char **argv;
  if (!stralloc_copys(&ufline,"From ")) temp_nomem();
  if (*sender)
   {
-   int len; int i; char ch;
+   unsigned int len;
+   char ch;
 
    len = str_len(sender);
    if (!stralloc_readyplus(&ufline,len)) temp_nomem();
@@ -633,7 +634,7 @@ char **argv;
      i = j + 1;
     }
 
- recips = (char **) alloc((numforward + 1) * sizeof(char *));
+ recips = calloc(numforward + 1, sizeof(char *));
  if (!recips) temp_nomem();
  numforward = 0;
 
@@ -643,8 +644,8 @@ char **argv;
  for (j = 0;j < cmds.len;++j)
    if (cmds.s[j] == '\n')
     {
+     unsigned int k = j;
      cmds.s[j] = 0;
-     k = j;
      while ((k > i) && ((cmds.s[k - 1] == ' ') || (cmds.s[k - 1] == '\t')))
        cmds.s[--k] = 0;
      switch(cmds.s[i])

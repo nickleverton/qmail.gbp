@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "substdio.h"
 #include "subfd.h"
 #include "exit.h"
@@ -9,7 +10,9 @@
 #include "constmap.h"
 #include "stralloc.h"
 #include "direntry.h"
+#include "uidgid.h"
 #include "auto_uids.h"
+#include "auto_users.h"
 #include "auto_qmail.h"
 #include "auto_break.h"
 #include "auto_patrn.h"
@@ -21,6 +24,18 @@ int meok;
 
 stralloc line = {0};
 char num[FMT_ULONG];
+
+uid_t auto_uida;
+uid_t auto_uidd;
+uid_t auto_uidl;
+uid_t auto_uido;
+uid_t auto_uidp;
+uid_t auto_uidq;
+uid_t auto_uidr;
+uid_t auto_uids;
+
+gid_t auto_gidn;
+gid_t auto_gidq;
 
 void safeput(buf,len)
 char *buf;
@@ -112,7 +127,7 @@ char *post;
   substdio_puts(subfdout,"\n");
   substdio_puts(subfdout,fn);
   substdio_puts(subfdout,": ");
-  switch(control_readfile(&line,fn)) {
+  switch(control_readfile(&line,fn,0)) {
     case 0:
       substdio_puts(subfdout,"(Default.) ");
       substdio_puts(subfdout,def);
@@ -136,12 +151,24 @@ char *post;
   }
 }
 
-void main()
+int main(void)
 {
   DIR *dir;
   direntry *d;
   struct stat stmrh;
   struct stat stmrhcdb;
+
+  auto_uida = inituid(auto_usera);
+  auto_uidd = inituid(auto_userd);
+  auto_uidl = inituid(auto_userl);
+  auto_uido = inituid(auto_usero);
+  auto_uidp = inituid(auto_userp);
+  auto_uidq = inituid(auto_userq);
+  auto_uidr = inituid(auto_userr);
+  auto_uids = inituid(auto_users);
+
+  auto_gidn = initgid(auto_groupn);
+  auto_gidq = initgid(auto_groupq);
 
   substdio_puts(subfdout,"qmail home directory: ");
   substdio_puts(subfdout,auto_qmail);
@@ -262,7 +289,7 @@ void main()
   do_int("timeoutsmtpd","1200","SMTP server data timeout is "," seconds");
   do_lst("virtualdomains","No virtual domains.","Virtual domain: ","");
 
-  while (d = readdir(dir)) {
+  while ((d = readdir(dir))) {
     if (str_equal(d->d_name,".")) continue;
     if (str_equal(d->d_name,"..")) continue;
     if (str_equal(d->d_name,"bouncefrom")) continue;

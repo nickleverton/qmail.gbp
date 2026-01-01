@@ -1,5 +1,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include "byte.h"
 #include "substdio.h"
 #include "readwrite.h"
 #include "subfd.h"
@@ -13,9 +15,10 @@
 #include "open.h"
 #include "error.h"
 #include "getln.h"
+#include "exit.h"
 #include "auto_break.h"
 #include "auto_qmail.h"
-#include "auto_usera.h"
+#include "auto_users.h"
 
 void die_chdir()
 {
@@ -197,18 +200,18 @@ void dosubuser()
   int i;
   char *x;
   unsigned int xlen;
-  char *uugh;
+  char *u;
 
   x = line.s; xlen = line.len; i = byte_chr(x,xlen,':'); if (i == xlen) return;
   if (!stralloc_copyb(&sub,x,i)) die_nomem();
   ++i; x += i; xlen -= i; i = byte_chr(x,xlen,':'); if (i == xlen) return;
-  uugh = constmap(&mapuser,x,i);
-  if (!uugh) die_user(x,i);
+  u = constmap(&mapuser,x,i);
+  if (!u) die_user(x,i);
   ++i; x += i; xlen -= i; i = byte_chr(x,xlen,':'); if (i == xlen) return;
 
   if (substdio_puts(subfdout,"=") == -1) die_write();
   if (substdio_put(subfdout,sub.s,sub.len) == -1) die_write();
-  if (substdio_puts(subfdout,uugh) == -1) die_write();
+  if (substdio_puts(subfdout,u) == -1) die_write();
   if (substdio_puts(subfdout,dashcolon) == -1) die_write();
   if (substdio_put(subfdout,x,i) == -1) die_write();
   if (substdio_puts(subfdout,":\n") == -1) die_write();
@@ -217,7 +220,7 @@ void dosubuser()
     if (substdio_puts(subfdout,"+") == -1) die_write();
     if (substdio_put(subfdout,sub.s,sub.len) == -1) die_write();
     if (substdio_put(subfdout,auto_break,1) == -1) die_write();
-    if (substdio_puts(subfdout,uugh) == -1) die_write();
+    if (substdio_puts(subfdout,u) == -1) die_write();
     if (substdio_puts(subfdout,dashcolon) == -1) die_write();
     if (substdio_put(subfdout,x,i) == -1) die_write();
     if (substdio_puts(subfdout,"-:\n") == -1) die_write();
@@ -228,9 +231,7 @@ int fd;
 substdio ss;
 char ssbuf[SUBSTDIO_INSIZE];
 
-void main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
   int opt;
   int match;
@@ -247,7 +248,7 @@ char **argv;
       case 'C': *auto_break = 0; break;
       case '?':
       default:
-	_exit(100);
+	return 100;
     }
 
   if (chdir(auto_qmail) == -1) die_chdir();
@@ -308,5 +309,5 @@ char **argv;
 
   if (substdio_puts(subfdout,".\n") == -1) die_write();
   if (substdio_flush(subfdout) == -1) die_write();
-  _exit(0);
+  return 0;
 }
