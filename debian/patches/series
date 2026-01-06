@@ -5,3 +5,5 @@
 notqmail-smtp-tls-20231230-1.09.patch
 notqmail-smtp-auth.patch
 notqmail-ext-todo.patch
+notqmail-smtpd-logging.patch
+notqmail-fastremote.patch

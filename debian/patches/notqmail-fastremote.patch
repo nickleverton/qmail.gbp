@@ -1,0 +1,157 @@
+diff --git a/qmail-remote.c b/qmail-remote.c
+index 5cc5a0a..f23f2fa 100644
+--- a/qmail-remote.c
++++ b/qmail-remote.c
+@@ -325,31 +325,48 @@ void blast()
+   int r;
+   char ch;
+ 
+-  for (;;) {
+-    r = substdio_get(&ssin,&ch,1);
++  int i;
++  int o;
++  char in[4096];
++  char out[4096*2+1];
++  int sol;
++  int barecr;
++
++  for (barecr = 0, sol = 1;;) {
++    r = substdio_get(&ssin,in,sizeof in);
+     if (r == 0) break;
+     if (r == -1) temp_read();
+-    if (ch == '.')
+-      substdio_put(&smtpto,".",1);
+-    while (ch != '\n') {
+-      if (ch == '\r') {
+-        r = substdio_get(&ssin, &ch, 1);
+-        if (r == 0)
+-          break;
+-        if (r == -1) temp_read();
+-        if (ch != '\n') {
+-          substdio_put(&smtpto, "\r\n", 2);
+-        } else
+-          break;
++    for (i = o = 0; i < r; ) {
++      if (sol && in[i] == '.') {
++	out[o++] = '.';
++	out[o++] = in[i++];
++      }
++      sol = 0;
++      while (i < r) {
++	if (in[i] == '\r') {
++	  barecr = 1;
++	  out[o++] = in[i++];
++	  continue;
++	}
++	if (in[i] == '\n') {
++	  sol = 1;
++	  ++i;
++	  if (barecr == 0)
++	    out[o++] = '\r';
++	  out[o++] = '\n';
++	  barecr = 0;
++	  break;
++	}
++	if (barecr == 1)
++	  out[o++] = '\n';
++	out[o++] = in[i++];
++	barecr = 0;
+       }
+-      substdio_put(&smtpto,&ch,1);
+-      r = substdio_get(&ssin,&ch,1);
+-      if (r == 0) perm_partialline();
+-      if (r == -1) temp_read();
+     }
+-    substdio_put(&smtpto,"\r\n",2);
++    substdio_put(&smtpto,out,o);
+   }
+- 
++  if (!sol) perm_partialline();
++
+   flagcritical = 1;
+   substdio_put(&smtpto,".\r\n",3);
+   substdio_flush(&smtpto);
+diff --git a/tests/unittest_qmail-remote.c b/tests/unittest_qmail-remote.c
+index a9eba05..61e76e7 100644
+--- a/tests/unittest_qmail-remote.c
++++ b/tests/unittest_qmail-remote.c
+@@ -102,6 +102,34 @@ START_TEST(test_blast_barecr)
+ }
+ END_TEST
+ 
++START_TEST(test_blast_barecr_4k)
++{
++  /* Check correct operation when bare CR is in last position of buffer.
++     Assumes 4k buffer size in "blast" */
++  char dotcrlf_4k[4095 + 9 + 1];
++  char barecr_4k[4095 + 5 + 1];
++
++  char ch = '0';
++  memset(dotcrlf_4k, 0, sizeof(dotcrlf_4k));
++  memset(barecr_4k, 0, sizeof(barecr_4k));
++  for (int i = 0; i < 4095; i++) {
++    barecr_4k[i] = ch;
++    dotcrlf_4k[i] = ch;
++    ch = (ch == '9' ? '0' : ++ch);
++  }
++  strcat(barecr_4k, "\rlf\n");
++  ck_assert_uint_eq( strlen(barecr_4k), 4099 );
++  strcat(dotcrlf_4k, "\r\nlf\r\n.\r\n");
++  ck_assert_uint_eq( strlen(dotcrlf_4k), 4104 );
++
++  ssin_setup(barecr_4k, dotcrlf_4k);
++
++  blast();
++
++  ck_assert_uint_eq(writeoffs, strlen(dotcrlf_4k));
++}
++END_TEST
++
+ START_TEST(test_blast_crlf)
+ {
+   const char *dotcrlf = "..\r\n.\r\n";
+@@ -114,6 +142,34 @@ START_TEST(test_blast_crlf)
+ }
+ END_TEST
+ 
++START_TEST(test_blast_crlf_4k)
++{
++  /* Check correct operation when CR+LF is split across buffer boundary.
++     Assumes 4k buffer size in "blast" */
++  char dotcrlf_4k[4095 + 5 + 1];
++  char crlf_4k[4095 + 2 + 1];
++
++  char ch = '0';
++  memset(dotcrlf_4k, 0, sizeof(dotcrlf_4k));
++  memset(crlf_4k, 0, sizeof(crlf_4k));
++  for (int i = 0; i < 4095; i++) {
++    crlf_4k[i] = ch;
++    dotcrlf_4k[i] = ch;
++    ch = (ch == '9' ? '0' : ++ch);
++  }
++  strcat(crlf_4k, "\r\n");
++  ck_assert_uint_eq( strlen(crlf_4k), 4097 );
++  strcat(dotcrlf_4k, "\r\n.\r\n");
++  ck_assert_uint_eq( strlen(dotcrlf_4k), 4100 );
++
++  ssin_setup(crlf_4k, dotcrlf_4k);
++
++  blast();
++
++  ck_assert_uint_eq(writeoffs, strlen(dotcrlf_4k));
++}
++END_TEST
++
+ TCase
+ *blast_something(void)
+ {
+@@ -122,7 +178,9 @@ TCase
+   tcase_add_test(tc, test_blast_empty);
+   tcase_add_test(tc, test_blast_dot);
+   tcase_add_test(tc, test_blast_barecr);
++  tcase_add_test(tc, test_blast_barecr_4k);
+   tcase_add_test(tc, test_blast_crlf);
++  tcase_add_test(tc, test_blast_crlf_4k);
+ 
+   return tc;
+ }

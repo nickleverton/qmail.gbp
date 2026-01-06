@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index f80cd98..29fff77 100644
+index bc277bc..d10591a 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -499,6 +499,10 @@ envread.o: \
+@@ -542,6 +542,10 @@ envread.o: \
  compile envread.c env.h str.h
  	./compile envread.c
  
@@ -13,35 +13,35 @@ index f80cd98..29fff77 100644
  error.a: \
  makelib error_str.o error_temp.o
  	./makelib error.a error_str.o error_temp.o
-@@ -1445,12 +1449,13 @@ qmail-smtpd: \
+@@ -1500,13 +1504,14 @@ qmail-smtpd: \
  load qmail-smtpd.o rcpthosts.o commands.o timeoutread.o \
  timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o received.o \
  date822fmt.o qmail.o cdb.a fd.a wait.a datetime.a getln.a \
 -open.a sig.a case.a env.a stralloc.a substdio.a error.a str.a \
 +open.a sig.a case.a env.a stralloc.a substdio.a errbits.o error.a str.a \
- fs.a auto_qmail.o socket.lib
+ fs.a auto_qmail.o base64.o socket.lib
  	./load qmail-smtpd rcpthosts.o commands.o timeoutread.o \
  	timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o \
+ 	tls.o tls_smtpd.o ssl_timeoutio.o ndelay.a -lssl -lcrypto \
  	received.o date822fmt.o qmail.o cdb.a fd.a wait.a \
  	datetime.a getln.a open.a sig.a case.a env.a stralloc.a \
 +	errbits.o \
- 	substdio.a error.a str.a fs.a auto_qmail.o  `cat \
+ 	substdio.a error.a str.a fs.a auto_qmail.o base64.o  `cat \
  	socket.lib`
  
-@@ -1462,7 +1467,7 @@ compile qmail-smtpd.c sig.h readwrite.h stralloc.h gen_alloc.h \
+@@ -1518,6 +1523,7 @@ compile qmail-smtpd.c sig.h readwrite.h stralloc.h gen_alloc.h \
  substdio.h alloc.h auto_qmail.h control.h received.h constmap.h \
  error.h ipme.h ip.h ipalloc.h ip.h gen_alloc.h ip.h qmail.h \
  substdio.h str.h fmt.h scan.h byte.h case.h env.h now.h datetime.h \
--exit.h rcpthosts.h timeoutread.h timeoutwrite.h commands.h
-+exit.h rcpthosts.h timeoutread.h timeoutwrite.h commands.h errbits.h
++errbits.h \
+ exit.h rcpthosts.h timeoutread.h timeoutwrite.h commands.h fd.h base64.h
  	./compile qmail-smtpd.c
  
- qmail-start: \
 diff --git a/TARGETS b/TARGETS
-index df24ca1..61b7451 100644
+index 4ab8427..4d16914 100644
 --- a/TARGETS
 +++ b/TARGETS
-@@ -91,6 +91,7 @@ substdio.a
+@@ -92,6 +92,7 @@ substdio.a
  error_str.o
  error_temp.o
  error.a
@@ -139,10 +139,10 @@ index 0000000..3171458
 +extern void eoutclean();
 +extern void eoutulong();
 diff --git a/qmail-smtpd.c b/qmail-smtpd.c
-index dba6832..447fd91 100644
+index ade75ea..e0d0a5d 100644
 --- a/qmail-smtpd.c
 +++ b/qmail-smtpd.c
-@@ -21,16 +21,36 @@
+@@ -21,6 +21,7 @@
  #include "env.h"
  #include "now.h"
  #include "exit.h"
@@ -150,15 +150,19 @@ index dba6832..447fd91 100644
  #include "rcpthosts.h"
  #include "timeoutread.h"
  #include "timeoutwrite.h"
- #include "commands.h"
+@@ -29,13 +30,32 @@
+ #include "wait.h"
+ #include "fd.h"
+ #include "base64.h"
 +#include "errbits.h"
+ 
+ #define AUTHSLEEP 5
  
 +#define enew()  { eout("qmail-smtpd["); epid(); eout("]: "); }
  #define MAXHOPS 100
  unsigned int databytes = 0;
  int timeout = 1200;
  
--GEN_SAFE_TIMEOUTWRITE(safewrite,timeout,fd,_exit(1))
 +char *remoteip="(not yet set)";
 +char *remotehost;
 +char *remoteinfo;
@@ -176,11 +180,10 @@ index dba6832..447fd91 100644
 +  _exit(1);
 +}
 +
-+GEN_SAFE_TIMEOUTWRITE(safewrite,timeout,fd,die_conn())
- 
- char ssoutbuf[512];
- substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
-@@ -38,22 +58,91 @@ substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
+ GEN_SAFE_TIMEOUTWRITE(safewrite_raw,timeout,fd,_exit(1))
+ ssize_t safewrite(int fd, const void *buf, size_t len)
+ {
+@@ -53,28 +73,91 @@ substdio ssout = SUBSTDIO_FDBUF(safewrite,1,ssoutbuf,sizeof(ssoutbuf));
  void flush() { substdio_flush(&ssout); }
  void out(s) char *s; { substdio_puts(&ssout,s); }
  
@@ -220,22 +223,18 @@ index dba6832..447fd91 100644
 +  out("451 See https://cr.yp.to/docs/smtplf.html.\r\n"); flush(); _exit(1);
 +}
  
+-void err_size() { out("552 sorry, that message size exceeds my databytes limit (#5.3.4)\r\n"); }
 -void err_bmf() { out("553 sorry, your envelope sender is in my badmailfrom list (#5.7.1)\r\n"); }
--void err_nogateway() { out("553 sorry, that domain isn't in my list of allowed rcpthosts (#5.7.1)\r\n"); }
--void err_unimpl(arg) char *arg; { out("502 unimplemented (#5.5.1)\r\n"); }
--void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
--void err_wantmail() { out("503 MAIL first (#5.5.1)\r\n"); }
--void err_wantrcpt() { out("503 RCPT first (#5.5.1)\r\n"); }
--void err_noop(arg) char *arg; { out("250 ok\r\n"); }
--void err_vrfy(arg) char *arg; { out("252 send some mail, i'll try my best\r\n"); }
--void err_qqt() { out("451 qqt failure (#4.3.0)\r\n"); }
 +void err_bmf()
 +{
 +  enew(); eout("Sender address in badmailfrom\n"); eflush();
 +  out("553 sorry, your envelope sender is in my badmailfrom list (#5.7.1)\r\n");
 +}
-+void err_nogateway()
-+{
+ void err_nogateway()
+ {
+-  out("553 sorry, that domain isn't in my list of allowed rcpthosts");
+-  tls_nogateway();
+-  out(" (#5.7.1)\r\n");
 +  enew(); eout("Recipient domain not in rcpthosts <"); eoutclean(addr.s); eout(">\n"); eflush();
 +  out("553 sorry, that domain isn't in my list of allowed rcpthosts (#5.7.1)\r\n");
 +}
@@ -283,11 +282,18 @@ index dba6832..447fd91 100644
 +{
 +  enew(); eout("Exceeded DATABYTES limit\n"); eflush();
 +  out("552 sorry, that message size exceeds my databytes limit (#5.3.4)\r\n");
-+}
+ }
+-void err_unimpl(arg) char *arg; { out("502 unimplemented (#5.5.1)\r\n"); }
+-void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
+-void err_wantmail() { out("503 MAIL first (#5.5.1)\r\n"); }
+-void err_wantrcpt() { out("503 RCPT first (#5.5.1)\r\n"); }
+-void err_noop(arg) char *arg; { out("250 ok\r\n"); }
+-void err_vrfy(arg) char *arg; { out("252 send some mail, i'll try my best\r\n"); }
+-void err_qqt() { out("451 qqt failure (#4.3.0)\r\n"); }
  
- 
- stralloc greeting = {0};
-@@ -69,15 +158,10 @@ void smtp_help(arg) char *arg;
+ int err_child() { out("454 oops, problem with child and I can't auth (#4.3.0)\r\n"); return -1; }
+ int err_fork() { out("454 oops, child won't start and I can't auth (#4.3.0)\r\n"); return -1; }
+@@ -101,6 +184,7 @@ void smtp_help(arg) char *arg;
  }
  void smtp_quit(arg) char *arg;
  {
@@ -295,18 +301,9 @@ index dba6832..447fd91 100644
    smtp_greet("221 "); out("\r\n"); flush(); _exit(0);
  }
  
--char *remoteip;
--char *remotehost;
--char *remoteinfo;
--char *local;
--char *relayclient;
--
- stralloc helohost = {0};
- char *fakehelo; /* pointer into helohost, or 0 */
- 
-@@ -128,11 +212,10 @@ void setup()
-   remoteinfo = env_get("TCPREMOTEINFO");
-   relayclient = env_get("RELAYCLIENT");
+@@ -181,11 +265,10 @@ void setup()
+   if (env_get("SMTPS")) { smtps = 1; tls_init(); }
+   else
    dohelo(remotehost);
 +  enew(); eout("New session\n"); eflush();
  }
@@ -317,12 +314,16 @@ index dba6832..447fd91 100644
  int addrparse(arg)
  char *arg;
  {
-@@ -215,37 +298,40 @@ int addrallowed()
- 
+@@ -271,8 +354,6 @@ int seenauth = 0;
  int seenmail = 0;
  int flagbarf; /* defined if seenmail */
+ int flagsize;
 -stralloc mailfrom = {0};
 -stralloc rcptto = {0};
+ stralloc fuser = {0};
+ stralloc mfparms = {0};
+ 
+@@ -335,6 +416,7 @@ void mailfrom_parms(arg) char *arg;
  
  void smtp_helo(arg) char *arg;
  {
@@ -330,22 +331,34 @@ index dba6832..447fd91 100644
    smtp_greet("250 "); out("\r\n");
    seenmail = 0; dohelo(arg);
  }
- void smtp_ehlo(arg) char *arg;
+@@ -343,6 +425,7 @@ void smtp_ehlo(arg) char *arg;
  {
+   char size[FMT_ULONG];
+   size[fmt_ulong(size,(unsigned int) databytes)] = 0;
 +  enew(); eout("Received EHLO "); eoutclean(arg); eout("\n"); eflush();
-   smtp_greet("250-"); out("\r\n250-PIPELINING\r\n250 8BITMIME\r\n");
-   seenmail = 0; dohelo(arg);
+   smtp_greet("250-");
+   if (tls_cert_available())
+     out("\r\n250-STARTTLS");
+@@ -355,28 +438,30 @@ void smtp_ehlo(arg) char *arg;
  }
  void smtp_rset(arg) char *arg;
  {
-   seenmail = 0;
+-  seenmail = 0; seenauth = 0;
+-  mailfrom.len = 0; rcptto.len = 0;
++  seenmail = 0;
 +  enew(); eout("Session RSET\n"); eflush();
    out("250 flushed\r\n");
  }
  void smtp_mail(arg) char *arg;
  {
+   if (smtpauth)
+     if (smtpauth > 10 && !seenauth) { err_submission(); return; }
 -  if (!addrparse(arg)) { err_syntax(); return; }
 +  if (!addrparse(arg)) { err_syntax("MAIL"); return; }
+   flagsize = 0;
+   mailfrom_parms(arg);
+-  if (flagsize) { err_size(); return; }
++  if (flagsize) { err_databytes(); return; }
    flagbarf = bmfcheck();
    seenmail = 1;
    if (!stralloc_copys(&rcptto,"")) die_nomem();
@@ -362,7 +375,7 @@ index dba6832..447fd91 100644
    if (flagbarf) { err_bmf(); return; }
    if (relayclient) {
      --addr.len;
-@@ -257,6 +343,8 @@ void smtp_rcpt(arg) char *arg; {
+@@ -388,6 +473,8 @@ void smtp_rcpt(arg) char *arg; {
    if (!stralloc_cats(&rcptto,"T")) die_nomem();
    if (!stralloc_cats(&rcptto,addr.s)) die_nomem();
    if (!stralloc_0(&rcptto)) die_nomem();
@@ -371,7 +384,7 @@ index dba6832..447fd91 100644
    out("250 ok\r\n");
  }
  
-@@ -275,6 +363,7 @@ substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
+@@ -409,6 +496,7 @@ substdio ssin = SUBSTDIO_FDBUF(saferead,0,ssinbuf,sizeof(ssinbuf));
  
  struct qmail qqt;
  unsigned int bytestooverflow = 0;
@@ -379,7 +392,7 @@ index dba6832..447fd91 100644
  
  void put(ch)
  char *ch;
-@@ -282,6 +371,7 @@ char *ch;
+@@ -416,6 +504,7 @@ char *ch;
    if (bytestooverflow)
      if (!--bytestooverflow)
        qmail_fail(&qqt);
@@ -387,7 +400,7 @@ index dba6832..447fd91 100644
    qmail_put(&qqt,ch,1);
  }
  
-@@ -358,6 +448,10 @@ void acceptmessage(qp) unsigned long qp;
+@@ -492,6 +581,10 @@ void acceptmessage(qp) unsigned long qp;
    accept_buf[fmt_ulong(accept_buf,qp)] = 0;
    out(accept_buf);
    out("\r\n");
@@ -398,7 +411,7 @@ index dba6832..447fd91 100644
  }
  
  void smtp_data(arg) char *arg; {
-@@ -369,6 +463,7 @@ void smtp_data(arg) char *arg; {
+@@ -503,6 +596,7 @@ void smtp_data(arg) char *arg; {
    if (!rcptto.len) { err_wantrcpt(); return; }
    seenmail = 0;
    if (databytes) bytestooverflow = databytes + 1;
@@ -406,12 +419,12 @@ index dba6832..447fd91 100644
    if (qmail_open(&qqt) == -1) { err_qqt(); return; }
    qp = qmail_qp(&qqt);
    out("354 go ahead\r\n");
-@@ -382,11 +477,15 @@ void smtp_data(arg) char *arg; {
+@@ -516,11 +610,15 @@ void smtp_data(arg) char *arg; {
   
    qqx = qmail_close(&qqt);
    if (!*qqx) { acceptmessage(qp); return; }
 -  if (hops) { out("554 too many hops, this message is looping (#5.4.6)\r\n"); return; }
--  if (databytes) if (!bytestooverflow) { out("552 sorry, that message size exceeds my databytes limit (#5.3.4)\r\n"); return; }
+-  if (databytes) if (!bytestooverflow) { err_size(); return; }
 +  if (hops) { err_hops(); return; }
 +  if (databytes) if (!bytestooverflow) { err_databytes(); return; }
    if (*qqx == 'D') out("554 "); else out("451 ");
@@ -423,4 +436,4 @@ index dba6832..447fd91 100644
 +  eflush();
  }
  
- struct commands smtpcommands[] = {
+ /* this file is too long ----------------------------------------- SMTP AUTH */

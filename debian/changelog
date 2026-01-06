@@ -1,3 +1,11 @@
+notqmail (1.09-0~njl12+1) bookworm; urgency=medium
+
+  * update and enable old patches for notqmail:
+      0001-qmail-errmsg-logging.diff -> notqmail-smtpd-logging
+      qmail-1.03-fastremote-3.patch -> notqmail-fastremote
+
+ -- Nick Leverton <nick@leverton.org>  Tue, 06 Jan 2026 13:46:19 +0000
+
 notqmail (1.09-0~njl12+0) bookworm; urgency=medium
 
   * New upstream release from notqmail fork.
